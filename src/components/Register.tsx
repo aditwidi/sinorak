@@ -185,7 +185,7 @@ export function Register() {
 
       <p className="mt-6 text-center text-sm text-gray-600">
         Sudah punya akun?{" "}
-        <a href="/sign-in" className="font-medium text-indigo-600 hover:text-indigo-500">
+        <a href="/sign-in" className="font-semibold text-indigo-600 hover:text-indigo-500">
           Masuk
         </a>
       </p>

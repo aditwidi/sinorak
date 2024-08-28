@@ -128,7 +128,7 @@ export function SignIn() {
 
       <p className="mt-6 text-center text-sm text-gray-600">
         Tidak punya akun?{" "}
-        <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+        <a href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
           Daftar
         </a>
       </p>
