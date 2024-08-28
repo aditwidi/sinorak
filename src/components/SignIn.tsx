@@ -110,7 +110,7 @@ export function SignIn() {
         </div>
 
         <div className="flex items-center justify-between">
-          <a href="#" className="text-sm text-indigo-600 hover:text-indigo-500">
+          <a href="/lupa-password" className="text-sm text-indigo-600 hover:text-indigo-500">
             Lupa Password?
           </a>
         </div>

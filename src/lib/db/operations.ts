@@ -1,6 +1,8 @@
+// lib/db/operations.ts
 import { db } from "./db";
 import { users, roles } from "./schema";
 import { eq } from "drizzle-orm";
+import { saltAndHashPassword } from "@/utils/password";
 
 // Fetch a user by nip
 export async function getUserBynip(nip: string) {
@@ -49,6 +51,20 @@ export async function createUser(nip: string, name: string, password: string, ro
     password,
     roleId: role.id,
   }).run();
+
+  return result;
+}
+
+// Update user password by ID
+export async function updateUserPassword(userId: number, newPassword: string) {
+  // Hash the new password before updating
+  const hashedPassword = saltAndHashPassword(newPassword);
+
+  const result = await db
+    .update(users)
+    .set({ password: hashedPassword }) // Save the hashed password
+    .where(eq(users.id, userId))
+    .run();
 
   return result;
 }
