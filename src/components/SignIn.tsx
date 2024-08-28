@@ -42,8 +42,8 @@ export function SignIn() {
   return (
     <div className="w-full max-w-xs p-4 space-y-6 bg-white rounded-lg shadow-md sm:max-w-sm md:max-w-md sm:p-6 lg:p-8">
       <div className="flex flex-col items-center">
-        <Image src="/images/logo.png" alt="Logo" width={48} height={48} className="mb-2" />
-        <h2 className="text-xl font-semibold text-gray-900 sm:text-2xl mb-2">
+        <Image src="/images/logo2.png" alt="Logo" width={200} height={100} className="mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl mb-2 self-start">
           Selamat Datang di SINORAK!
         </h2>
         <p className="text-sm text-gray-500 sm:text-base">
