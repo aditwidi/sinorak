@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
@@ -16,7 +16,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { LoadingIndicator } from "./LoadingIndicator";
 
-const LightSidebar = () => {
+interface LayoutProps {
+    children: ReactNode; // Prop to accept dynamic content
+}
+
+const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
     const [isDropdownKegiatanOpen, setIsDropdownKegiatanOpen] = useState<boolean>(false);
     const [isDropdownMitraOpen, setIsDropdownMitraOpen] = useState<boolean>(false);
@@ -29,21 +33,10 @@ const LightSidebar = () => {
     const userMenuRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen((prev) => !prev);
-    };
-
-    const toggleDropdownKegiatan = () => {
-        setIsDropdownKegiatanOpen((prev) => !prev);
-    };
-
-    const toggleDropdownMitra = () => {
-        setIsDropdownMitraOpen((prev) => !prev);
-    };
-
-    const toggleUserMenu = () => {
-        setIsUserMenuOpen((prev) => !prev);
-    };
+    const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+    const toggleDropdownKegiatan = () => setIsDropdownKegiatanOpen((prev) => !prev);
+    const toggleDropdownMitra = () => setIsDropdownMitraOpen((prev) => !prev);
+    const toggleUserMenu = () => setIsUserMenuOpen((prev) => !prev);
 
     const handleLogout = () => {
         Swal.fire({
@@ -89,7 +82,7 @@ const LightSidebar = () => {
     return (
         <>
             <nav className="fixed top-0 z-50 w-full bg-white border-b border-gray-200">
-                <div className="px-3 py-3 lg:px-5 lg:pl-3">
+            <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center justify-start rtl:justify-end">
                             <button
@@ -162,7 +155,7 @@ const LightSidebar = () => {
                 className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform bg-white border-r border-gray-200 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
                     }`}
                 aria-label="Sidebar"
-                ref={sidebarRef} // Added ref here
+                ref={sidebarRef}
             >
                 <div className="flex flex-col h-full px-3 pb-4 bg-white">
                     <ul className="flex-grow space-y-2 font-medium overflow-y-auto">
@@ -300,7 +293,15 @@ const LightSidebar = () => {
                         </button>
                     </div>
                 </div>
+
             </aside>
+
+            {/* Main Content Area */}
+            <div className={`ml-0 sm:ml-64 pt-20 px-4`}>
+                <div className="max-w-7xl mx-auto">
+                    {children}
+                </div>
+            </div>
         </>
     );
 };
