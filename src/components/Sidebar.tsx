@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 import {
     Bars3Icon,
@@ -13,12 +14,20 @@ import {
     UserGroupIcon,
     ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import { LoadingIndicator } from "./LoadingIndicator";
 
 const LightSidebar = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isDropdownKegiatanOpen, setIsDropdownKegiatanOpen] = useState(false);
-    const [isDropdownMitraOpen, setIsDropdownMitraOpen] = useState(false);
-    const [loading, setLoading] = useState(false); // State to handle loading spinner
+    const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+    const [isDropdownKegiatanOpen, setIsDropdownKegiatanOpen] = useState<boolean>(false);
+    const [isDropdownMitraOpen, setIsDropdownMitraOpen] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+
+    const { data: session, status } = useSession();
+    console.log(session);
+    const pathname = usePathname();
+
+    const userMenuRef = useRef<HTMLDivElement>(null);
 
     const toggleSidebar = () => {
         setIsSidebarOpen((prev) => !prev);
@@ -32,7 +41,10 @@ const LightSidebar = () => {
         setIsDropdownMitraOpen((prev) => !prev);
     };
 
-    // Handle logout with SweetAlert confirmation
+    const toggleUserMenu = () => {
+        setIsUserMenuOpen((prev) => !prev);
+    };
+
     const handleLogout = () => {
         Swal.fire({
             title: "Apakah Anda yakin?",
@@ -45,23 +57,35 @@ const LightSidebar = () => {
             confirmButtonText: "Ya, yakin!",
         }).then((result) => {
             if (result.isConfirmed) {
-                setLoading(true); // Show the spinner
-                // Initiate sign out
+                setLoading(true);
                 signOut({
-                    callbackUrl: "/sign-in", // Redirect URL after sign-out
+                    callbackUrl: "/sign-in",
                 });
             }
         });
     };
 
+    const isActive = (path: string): boolean => pathname === path;
+
+    const handleClickOutside = (event: MouseEvent) => {
+        if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+            setIsUserMenuOpen(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     return (
         <>
-            {/* Navbar */}
             <nav className="fixed top-0 z-50 w-full bg-white border-b border-gray-200">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center justify-start rtl:justify-end">
-                            {/* Toggle Button */}
                             <button
                                 onClick={toggleSidebar}
                                 aria-controls="logo-sidebar"
@@ -71,7 +95,6 @@ const LightSidebar = () => {
                                 <span className="sr-only">Open sidebar</span>
                                 <Bars3Icon className="w-6 h-6" aria-hidden="true" />
                             </button>
-                            {/* Logo */}
                             <a href="https://flowbite.com" className="flex ms-2 md:me-24">
                                 <Image
                                     src="/images/logo.png"
@@ -85,17 +108,49 @@ const LightSidebar = () => {
                                 </span>
                             </a>
                         </div>
-                        {/* User Menu */}
-                        <div className="flex items-center">
-                            <div className="flex items-center ms-3">
-                                <UserCircleIcon className="w-8 h-8 text-gray-500" aria-hidden="true" />
-                            </div>
+                        <div className="relative" ref={userMenuRef}>
+                            <button
+                                onClick={toggleUserMenu}
+                                className="flex items-center ms-3 focus:outline-none"
+                            >
+                                <UserCircleIcon className="w-8 h-8 text-gray-500" />
+                            </button>
+
+                            {isUserMenuOpen && session && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                                    <div className="p-4 border-b border-gray-200">
+                                        <p className="text-sm font-semibold text-gray-900 mb-1">
+                                            {session.user?.name || "Username"}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {session.user?.nip || "12345678"}
+                                        </p>
+                                    </div>
+                                    <ul className="py-1">
+                                        <li>
+                                            <a
+                                                href="/profile"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Profile
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            >
+                                                Keluar
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </nav>
 
-            {/* Sidebar */}
             <aside
                 id="logo-sidebar"
                 className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform bg-white border-r border-gray-200 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
@@ -106,15 +161,22 @@ const LightSidebar = () => {
                     <ul className="flex-grow space-y-2 font-medium overflow-y-auto">
                         <li>
                             <a
-                                href="#"
-                                className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group"
+                                href="/admin"
+                                className={`flex items-center p-2 rounded-lg group ${isActive("/admin")
+                                        ? "bg-blue-500 text-white"
+                                        : "text-gray-900 hover:bg-gray-100"
+                                    }`}
                             >
-                                <HomeIcon className="w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900" />
+                                <HomeIcon
+                                    className={`w-5 h-5 transition duration-75 ${isActive("/admin")
+                                            ? "text-white"
+                                            : "text-gray-500 group-hover:text-gray-900"
+                                        }`}
+                                />
                                 <span className="ms-3">Home</span>
                             </a>
                         </li>
 
-                        {/* Multi-Level Menu Kegiatan Statistik */}
                         <li>
                             <button
                                 type="button"
@@ -133,21 +195,26 @@ const LightSidebar = () => {
                                     aria-hidden="true"
                                 />
                             </button>
-                            {/* Sub-menu Daftar */}
                             {isDropdownKegiatanOpen && (
                                 <ul id="dropdown-kegiatan" className="py-2 space-y-2">
                                     <li>
                                         <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 hover:bg-gray-100 group"
+                                            href="/admin/daftar-kegiatan"
+                                            className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/daftar-kegiatan")
+                                                    ? "bg-blue-500 text-white"
+                                                    : "text-gray-900 hover:bg-gray-100"
+                                                }`}
                                         >
                                             Daftar Kegiatan
                                         </a>
                                     </li>
                                     <li>
                                         <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 hover:bg-gray-100 group"
+                                            href="/admin/tambah-kegiatan"
+                                            className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/tambah-kegiatan")
+                                                    ? "bg-blue-500 text-white"
+                                                    : "text-gray-900 hover:bg-gray-100"
+                                                }`}
                                         >
                                             Tambah Kegiatan
                                         </a>
@@ -156,7 +223,6 @@ const LightSidebar = () => {
                             )}
                         </li>
 
-                        {/* Multi-Level Menu Mitra Statistik */}
                         <li>
                             <button
                                 type="button"
@@ -175,21 +241,26 @@ const LightSidebar = () => {
                                     aria-hidden="true"
                                 />
                             </button>
-                            {/* Sub-menu Mitra */}
                             {isDropdownMitraOpen && (
                                 <ul id="dropdown-mitra" className="py-2 space-y-2">
                                     <li>
                                         <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 hover:bg-gray-100 group"
+                                            href="/admin/daftar-mitra"
+                                            className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/daftar-mitra")
+                                                    ? "bg-blue-500 text-white"
+                                                    : "text-gray-900 hover:bg-gray-100"
+                                                }`}
                                         >
                                             Daftar Mitra
                                         </a>
                                     </li>
                                     <li>
                                         <a
-                                            href="#"
-                                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 hover:bg-gray-100 group"
+                                            href="/admin/tambah-mitra"
+                                            className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/tambah-mitra")
+                                                    ? "bg-blue-500 text-white"
+                                                    : "text-gray-900 hover:bg-gray-100"
+                                                }`}
                                         >
                                             Tambah Mitra
                                         </a>
@@ -199,76 +270,30 @@ const LightSidebar = () => {
                         </li>
                     </ul>
 
-                    {/* Logout Button */}
                     <div className="pt-4 border-t border-gray-200">
-                        {loading ? (
-                            <button
-                                type="button"
-                                className="flex items-center w-full p-2 text-white bg-indigo-500 transition duration-75 rounded-lg hover:bg-indigo-600 group"
-                                disabled
-                            >
-                                <svg
-                                    className="animate-spin h-5 w-5 mr-3 text-white"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                                    ></path>
-                                </svg>
-                                Processing...
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center w-full p-2 text-red-600 transition duration-75 rounded-lg hover:bg-red-100 group"
-                            >
-                                <ArrowLeftOnRectangleIcon className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-800" />
-                                <span className="ms-3">Logout</span>
-                            </button>
-                        )}
+                        <button
+                            onClick={handleLogout}
+                            className={`flex items-center w-full p-2 transition duration-75 rounded-lg group ${loading
+                                    ? "bg-indigo-500 text-white cursor-not-allowed"
+                                    : "text-red-600 hover:bg-red-100"
+                                }`}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <LoadingIndicator />
+                                    <span className="ml-2">Processing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ArrowLeftOnRectangleIcon className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-800" />
+                                    <span className="ms-3">Keluar</span>
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
             </aside>
-
-            {/* Main Content Area */}
-            <div className="p-4 sm:ml-64">
-                <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg mt-14 bg-white">
-                    {/* Main content placeholder */}
-                    <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div className="flex items-center justify-center h-24 rounded bg-gray-50">
-                            <p className="text-2xl text-gray-400">
-                                <svg
-                                    className="w-3.5 h-3.5"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 18 18"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M9 1v16M1 9h16"
-                                    />
-                                </svg>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </>
     );
 };

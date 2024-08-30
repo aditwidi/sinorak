@@ -36,6 +36,7 @@ export const authOptions = {
           return {
             id: user.id!.toString(), // Convert id to string
             nip: user.nip,
+            name: user.name,
             role: user.role,
           };
         } catch (error: any) {
@@ -48,12 +49,14 @@ export const authOptions = {
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
         session.user.role = token.role || null;
+        session.user.nip = token.nip as string; // Add nip to session
       }
       return session;
     },
     async jwt({ token, user }: { token: JWT; user?: CustomUser | User | undefined }) {
       if (user && 'role' in user) {
         token.role = user.role;
+        token.nip = user.nip; // Add nip to JWT token
       }
       return token;
     },
