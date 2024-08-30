@@ -24,7 +24,6 @@ const LightSidebar = () => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
 
     const { data: session, status } = useSession();
-    console.log(session);
     const pathname = usePathname();
 
     const userMenuRef = useRef<HTMLDivElement>(null);
