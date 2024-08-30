@@ -66,7 +66,7 @@ export function SignIn() {
             onChange={(e) => setNip(e.target.value)}
             pattern="\d{9,18}"
             title="NIP harus terdiri dari 9 sampai 18 angka."
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
             placeholder="Masukkan NIP Anda"
           />
           {error === "NIP anda tidak terdaftar." && (
@@ -88,13 +88,13 @@ export function SignIn() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={4}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
               placeholder="Masukkan Password Anda"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-indigo-500 focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-500 focus:outline-none"
               aria-label="Toggle Password Visibility"
             >
               {showPassword ? (
@@ -110,7 +110,7 @@ export function SignIn() {
         </div>
 
         <div className="flex items-center justify-between">
-          <a href="/lupa-password" className="text-sm text-indigo-600 hover:text-indigo-500">
+          <a href="/lupa-password" className="text-sm text-blue-600 hover:text-blue-500">
             Lupa Password?
           </a>
         </div>
@@ -118,7 +118,7 @@ export function SignIn() {
         <div>
           <button
             type="submit"
-            className="w-full flex justify-center rounded-md bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+            className="w-full flex justify-center rounded-md bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400"
             disabled={loading}
           >
             {loading ? <LoadingIndicator /> : "Masuk"}
@@ -128,7 +128,7 @@ export function SignIn() {
 
       <p className="mt-6 text-center text-sm text-gray-600">
         Tidak punya akun?{" "}
-        <a href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <a href="/register" className="font-semibold text-blue-600 hover:text-blue-500">
           Daftar
         </a>
       </p>

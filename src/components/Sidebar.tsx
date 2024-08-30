@@ -281,7 +281,7 @@ const LightSidebar = () => {
                         <button
                             onClick={handleLogout}
                             className={`flex items-center w-full p-2 transition duration-75 rounded-lg group ${loading
-                                    ? "bg-indigo-500 text-white cursor-not-allowed"
+                                    ? "bg-blue-500 text-white cursor-not-allowed"
                                     : "text-red-600 hover:bg-red-100"
                                 }`}
                             disabled={loading}
