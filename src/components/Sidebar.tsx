@@ -82,7 +82,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
     return (
         <>
             <nav className="fixed top-0 z-50 w-full bg-white border-b border-gray-200">
-            <div className="px-3 py-3 lg:px-5 lg:pl-3">
+                <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center justify-start rtl:justify-end">
                             <button
@@ -163,14 +163,14 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                             <a
                                 href="/admin"
                                 className={`flex items-center p-2 rounded-lg group ${isActive("/admin")
-                                        ? "bg-blue-500 text-white"
-                                        : "text-gray-900 hover:bg-gray-100"
+                                    ? "bg-blue-500 text-white"
+                                    : "text-gray-900 hover:bg-gray-100"
                                     }`}
                             >
                                 <HomeIcon
                                     className={`w-5 h-5 transition duration-75 ${isActive("/admin")
-                                            ? "text-white"
-                                            : "text-gray-500 group-hover:text-gray-900"
+                                        ? "text-white"
+                                        : "text-gray-500 group-hover:text-gray-900"
                                         }`}
                                 />
                                 <span className="ms-3">Home</span>
@@ -201,8 +201,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                         <a
                                             href="/admin/daftar-kegiatan"
                                             className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/daftar-kegiatan")
-                                                    ? "bg-blue-500 text-white"
-                                                    : "text-gray-900 hover:bg-gray-100"
+                                                ? "bg-blue-500 text-white"
+                                                : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
                                             Daftar Kegiatan
@@ -212,8 +212,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                         <a
                                             href="/admin/tambah-kegiatan"
                                             className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/tambah-kegiatan")
-                                                    ? "bg-blue-500 text-white"
-                                                    : "text-gray-900 hover:bg-gray-100"
+                                                ? "bg-blue-500 text-white"
+                                                : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
                                             Tambah Kegiatan
@@ -247,8 +247,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                         <a
                                             href="/admin/daftar-mitra"
                                             className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/daftar-mitra")
-                                                    ? "bg-blue-500 text-white"
-                                                    : "text-gray-900 hover:bg-gray-100"
+                                                ? "bg-blue-500 text-white"
+                                                : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
                                             Daftar Mitra
@@ -258,8 +258,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                         <a
                                             href="/admin/tambah-mitra"
                                             className={`flex items-center w-full p-2 rounded-lg pl-11 group ${isActive("/admin/tambah-mitra")
-                                                    ? "bg-blue-500 text-white"
-                                                    : "text-gray-900 hover:bg-gray-100"
+                                                ? "bg-blue-500 text-white"
+                                                : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
                                             Tambah Mitra
@@ -274,8 +274,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                         <button
                             onClick={handleLogout}
                             className={`flex items-center w-full p-2 transition duration-75 rounded-lg group ${loading
-                                    ? "bg-blue-500 text-white cursor-not-allowed"
-                                    : "text-red-600 hover:bg-red-100"
+                                ? "bg-blue-500 text-white cursor-not-allowed"
+                                : "text-red-600 hover:bg-red-100"
                                 }`}
                             disabled={loading}
                         >
@@ -297,11 +297,9 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div className={`ml-0 sm:ml-64 pt-20 px-4`}>
-                <div className="max-w-7xl mx-auto">
-                    {children}
-                </div>
-            </div>
+            <main className={`flex-1 ml-0 sm:ml-64 pt-20 px-4`}> {/* Adjust the main content area */}
+                <div className="max-w-7xl mx-auto">{children}</div>
+            </main>
         </>
     );
 };

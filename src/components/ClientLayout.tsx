@@ -12,7 +12,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     return (
         <SessionProvider>
             {/* Layout Wrapper with Off-White Background */}
-            <div className="flex min-h-screen bg-gray-50"> {/* Off-white background */}
+            <div className="min-h-screen bg-gray-50"> {/* Off-white background */}
                 {/* Sidebar Component */}
                 <Sidebar>
                     {children} {/* Render the page-specific content */}
