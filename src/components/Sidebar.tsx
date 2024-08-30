@@ -27,6 +27,7 @@ const LightSidebar = () => {
     const pathname = usePathname();
 
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     const toggleSidebar = () => {
         setIsSidebarOpen((prev) => !prev);
@@ -67,7 +68,13 @@ const LightSidebar = () => {
     const isActive = (path: string): boolean => pathname === path;
 
     const handleClickOutside = (event: MouseEvent) => {
-        if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        if (
+            sidebarRef.current &&
+            !sidebarRef.current.contains(event.target as Node) &&
+            userMenuRef.current &&
+            !userMenuRef.current.contains(event.target as Node)
+        ) {
+            setIsSidebarOpen(false);
             setIsUserMenuOpen(false);
         }
     };
@@ -155,6 +162,7 @@ const LightSidebar = () => {
                 className={`fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform bg-white border-r border-gray-200 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"
                     }`}
                 aria-label="Sidebar"
+                ref={sidebarRef} // Added ref here
             >
                 <div className="flex flex-col h-full px-3 pb-4 bg-white">
                     <ul className="flex-grow space-y-2 font-medium overflow-y-auto">
