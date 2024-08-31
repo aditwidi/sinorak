@@ -94,7 +94,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                 <span className="sr-only">Open sidebar</span>
                                 <Bars3Icon className="w-6 h-6" aria-hidden="true" />
                             </button>
-                            <a href="https://flowbite.com" className="flex ms-2 md:me-24">
+                            <a href="/" className="flex ms-2 md:me-24">
                                 <Image
                                     src="/images/logo.png"
                                     className="h-8 me-3"
@@ -282,7 +282,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                             {loading ? (
                                 <>
                                     <LoadingIndicator />
-                                    <span className="ml-2">Processing...</span>
+                                    <span className="ml-2">Memproses</span>
                                 </>
                             ) : (
                                 <>
