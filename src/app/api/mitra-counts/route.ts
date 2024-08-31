@@ -1,27 +1,30 @@
+// /app/api/mitra-counts/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { mitra } from "@/lib/db/schema"; // Import your schema
 import { sql } from "drizzle-orm"; // Import the `sql` helper from Drizzle ORM
 
+export const revalidate = 0; // Revalidate every 10 seconds
+
 export async function GET() {
     try {
-        // Fetch counts using SQL functions directly
+        // Fetch counts using SQL functions
         const pendataanCountResult = await db
             .select({ count: sql<number>`COUNT(*)` })
             .from(mitra)
-            .where(sql`jenis_petugas = 'Pendataan'`)
+            .where(sql`${mitra.jenis_petugas} = ${'Pendataan'}`)
             .get();
 
         const pemeriksaanCountResult = await db
             .select({ count: sql<number>`COUNT(*)` })
             .from(mitra)
-            .where(sql`jenis_petugas = 'Pemeriksaan'`)
+            .where(sql`${mitra.jenis_petugas} = ${'Pemeriksaan'}`)
             .get();
 
         const pengolahanCountResult = await db
             .select({ count: sql<number>`COUNT(*)` })
             .from(mitra)
-            .where(sql`jenis_petugas = 'Pengolahan'`)
+            .where(sql`${mitra.jenis_petugas} = ${'Pengolahan'}`)
             .get();
 
         // Extract count values from query results
@@ -39,7 +42,7 @@ export async function GET() {
         );
 
         // Apply server-side caching instructions for revalidation
-        response.headers.set("Cache-Control", "no-store, max-age=0");
+        response.headers.set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
 
         return response;
     } catch (error) {
