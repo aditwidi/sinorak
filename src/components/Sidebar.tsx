@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
@@ -27,7 +27,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
 
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const pathname = usePathname();
 
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,8 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
         });
     };
 
-    const isActive = (path: string): boolean => pathname === path;
+    // Memoize the `isActive` function to avoid re-creation on each render
+    const isActive = useCallback((path: string): boolean => pathname === path, [pathname]);
 
     const handleClickOutside = (event: MouseEvent) => {
         if (
@@ -71,6 +72,21 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
             setIsUserMenuOpen(false);
         }
     };
+
+    // Automatically open the parent dropdown menu if a child menu is active
+    useEffect(() => {
+        if (isActive("/admin/daftar-kegiatan") || isActive("/admin/tambah-kegiatan")) {
+            setIsDropdownKegiatanOpen(true);
+        } else {
+            setIsDropdownKegiatanOpen(false);
+        }
+
+        if (isActive("/admin/daftar-mitra") || isActive("/admin/tambah-mitra")) {
+            setIsDropdownMitraOpen(true);
+        } else {
+            setIsDropdownMitraOpen(false);
+        }
+    }, [isActive]); // Include isActive in the dependency array
 
     useEffect(() => {
         document.addEventListener("mousedown", handleClickOutside);
@@ -177,6 +193,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                             </a>
                         </li>
 
+                        {/* Kegiatan Dropdown */}
                         <li>
                             <button
                                 type="button"
@@ -223,6 +240,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                             )}
                         </li>
 
+                        {/* Mitra Dropdown */}
                         <li>
                             <button
                                 type="button"
@@ -293,7 +311,6 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                         </button>
                     </div>
                 </div>
-
             </aside>
 
             {/* Main Content Area */}

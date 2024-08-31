@@ -1,6 +1,6 @@
 // lib/db/operations.ts
 import { db } from "./db";
-import { users, roles } from "./schema";
+import { users, roles, mitra } from "./schema";
 import { eq } from "drizzle-orm";
 import { saltAndHashPassword } from "@/utils/password";
 
@@ -79,6 +79,29 @@ export async function updateUserRole(userId: number, newRole: "admin" | "user") 
     .set({ roleId }) // Update roleId column in the users table
     .where(eq(users.id, userId))
     .run();
+
+  return result;
+}
+
+// Function to create a new mitra
+export async function createMitra(data: {
+  sobat_id: string;
+  nik: string;
+  jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+  nama: string;
+  pekerjaan: string;
+  alamat: string;
+  jenis_kelamin: "Laki-laki" | "Perempuan";
+}) {
+  const result = await db.insert(mitra).values({
+    sobat_id: data.sobat_id,
+    nik: data.nik,
+    jenis_petugas: data.jenis_petugas,
+    nama: data.nama,
+    pekerjaan: data.pekerjaan,
+    alamat: data.alamat,
+    jenis_kelamin: data.jenis_kelamin,
+  }).run();
 
   return result;
 }
