@@ -68,3 +68,17 @@ export async function updateUserPassword(userId: number, newPassword: string) {
 
   return result;
 }
+
+// Update user role by ID
+export async function updateUserRole(userId: number, newRole: "admin" | "user") {
+  // Determine the role ID based on the role name
+  const roleId = newRole === "admin" ? 1 : 2; // Make sure these role IDs are correct for your schema
+
+  const result = await db
+    .update(users)
+    .set({ roleId }) // Update roleId column in the users table
+    .where(eq(users.id, userId))
+    .run();
+
+  return result;
+}

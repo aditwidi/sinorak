@@ -1,4 +1,3 @@
-// auth.ts
 import NextAuth, { User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getUserWithRoleBynip } from "@/lib/db/operations";
@@ -29,7 +28,7 @@ export const authOptions = {
           if (!user) throw new Error("NIP anda tidak terdaftar."); // Custom error message for NIP
 
           // Compare the provided password with the stored hash
-          const passwordMatch = verifyPassword(password, user.password);
+          const passwordMatch = await verifyPassword(password, user.password); // Ensure async verification
           if (!passwordMatch) throw new Error("Password salah."); // Custom error message for password
 
           // Return user object if credentials are valid
@@ -54,7 +53,7 @@ export const authOptions = {
       return session;
     },
     async jwt({ token, user }: { token: JWT; user?: CustomUser | User | undefined }) {
-      if (user && 'role' in user) {
+      if (user && "role" in user) {
         token.role = user.role;
         token.nip = user.nip; // Add nip to JWT token
       }

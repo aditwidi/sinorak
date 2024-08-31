@@ -218,7 +218,7 @@ export default function AdminPage() {
           aria-label="Table navigation"
         >
           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-            Showing <span className="font-semibold text-gray-900 dark:text-white">{startIdx + 1}-{Math.min(startIdx + itemsPerPage, filteredData.length)}</span> of{" "}
+            Menampilkan <span className="font-semibold text-gray-900 dark:text-white">{startIdx + 1}-{Math.min(startIdx + itemsPerPage, filteredData.length)}</span> dari{" "}
             <span className="font-semibold text-gray-900 dark:text-white">{filteredData.length}</span>
           </span>
           {/* Adjusted Pagination */}

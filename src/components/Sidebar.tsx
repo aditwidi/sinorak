@@ -128,7 +128,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                     <ul className="py-1">
                                         <li>
                                             <a
-                                                href="/profile"
+                                                href="/admin/detail-profile"
                                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
                                                 Profile
