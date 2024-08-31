@@ -11,7 +11,7 @@ import {
   CurrencyDollarIcon,
   EyeIcon,
   FunnelIcon,
-} from "@heroicons/react/24/outline"; // Updated to include FunnelIcon
+} from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -28,7 +28,8 @@ interface Activity {
 }
 
 export default function AdminPage() {
-  const { data: session } = useSession();
+  // Correctly destructure both `data` and `status` from useSession
+  const { data: session, status } = useSession(); 
 
   const breadcrumbItems: BreadcrumbItem[] = [];
 
@@ -47,7 +48,7 @@ export default function AdminPage() {
 
   // State for filter
   const [filter, setFilter] = useState<string>("Semua");
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false); // State for dropdown toggle
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   // Functions to handle pagination
   const handlePrevPage = () => {
@@ -81,7 +82,7 @@ export default function AdminPage() {
 
       {/* Greeting */}
       <h1 className="text-2xl font-bold mt-4 text-black">
-      Halo, {status === "loading" ? <Skeleton width={100} /> : session?.user?.name || <Skeleton width={100} />}!
+        Halo, {status === "loading" ? <Skeleton width={100} /> : session?.user?.name || <Skeleton width={100} />}!
       </h1>
 
       {/* Stat Cards */}
@@ -242,7 +243,7 @@ export default function AdminPage() {
                 >
                   <path
                     fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293-3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                     clipRule="evenodd"
                   ></path>
                 </svg>

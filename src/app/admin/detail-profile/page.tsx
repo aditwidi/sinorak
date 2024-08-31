@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2"; // Import SweetAlert2
 import Breadcrumb from "@/components/Breadcrumb";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { LoadingIndicator } from "@/components/LoadingIndicator";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
+import { LoadingIndicator } from "@/components/LoadingIndicator"; // Import the LoadingIndicator component
+import Skeleton from "react-loading-skeleton"; // Import the Skeleton component
+import "react-loading-skeleton/dist/skeleton.css"; // Import the Skeleton CSS
 
 interface BreadcrumbItem {
     label: string;
@@ -15,11 +15,10 @@ interface BreadcrumbItem {
 }
 
 export default function EditProfilePage() {
-    // Ensure this component is only rendered on the client side
-    const { data: session, status } = useSession();
+    const { data: session, status } = useSession(); // Get session data
     const [name, setName] = useState("");
     const [nip, setNip] = useState("");
-    const [role, setRole] = useState<"admin" | "user">("user");
+    const [role, setRole] = useState<"admin" | "user">("user"); // Default role
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,7 +44,7 @@ export default function EditProfilePage() {
     }, [session, status]);
 
     const handleRoleChange = async () => {
-        if (!session || !session.user) return;
+        if (!session || !session.user) return; // Ensure session is available
 
         setLoadingRoleChange(true);
         try {
@@ -69,7 +68,8 @@ export default function EditProfilePage() {
                     title: "Berhasil",
                     text: "Role berhasil diperbarui.",
                 }).then(async () => {
-                    await signOut({ redirect: true, callbackUrl: "/sign-in" });
+                    // Automatically sign the user out after a successful role change
+                    await signOut({ redirect: true, callbackUrl: "/sign-in" }); // Redirect to the login page
                 });
             }
         } catch (error) {
@@ -132,11 +132,6 @@ export default function EditProfilePage() {
             setLoadingPasswordChange(false);
         }
     };
-
-    // Ensure this component only renders on the client side
-    if (typeof window === "undefined") {
-        return null;
-    }
 
     return (
         <div className="w-full text-black">
