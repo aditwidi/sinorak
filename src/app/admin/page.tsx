@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import useSWR from "swr"; // Import SWR
 import Breadcrumb from "@/components/Breadcrumb";
 import StatCard from "@/components/StatCard";
 import {
@@ -11,8 +12,8 @@ import {
   CurrencyDollarIcon,
   EyeIcon,
   FunnelIcon,
-  ChevronLeftIcon, // Import ChevronLeftIcon
-  ChevronRightIcon, // Import ChevronRightIcon
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -29,29 +30,26 @@ interface Activity {
   type: string;
 }
 
+// Fetcher function to use with SWR
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then((res) => res.json());
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
+  const { data, error } = useSWR("/api/mitra-counts", fetcher, { refreshInterval: 10000 });
 
-  const breadcrumbItems: BreadcrumbItem[] = [];
-
-  // Sample Data
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const activities: Activity[] = [
     { name: "Pemeriksaan Updating Listing (Susenas Maret 2024)", code: "2898.BMA.007.005.A.521213", responsible: "John Doe", type: "Pemeriksaan" },
     { name: "Pendataan Survey Sosial Ekonomi (Desember 2024)", code: "2898.BMA.007.005.A.521214", responsible: "Jane Smith", type: "Pendataan" },
     { name: "Analisis Data Konsumsi Rumah Tangga (2024)", code: "2898.BMA.007.005.A.521215", responsible: "Michael Johnson", type: "Pengolahan" },
     // Add more data here as needed
   ];
-
-  // State for pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  
   const totalPages = Math.ceil(activities.length / itemsPerPage);
-
-  // State for filter
   const [filter, setFilter] = useState<string>("Semua");
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
-  // Functions to handle pagination
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
@@ -60,28 +58,28 @@ export default function AdminPage() {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  // Handle filter change
   const handleFilterChange = (filterType: string) => {
     setFilter(filterType);
-    setCurrentPage(1); // Reset to page 1 whenever filter changes
-    setIsFilterOpen(false); // Close the dropdown after selecting a filter
+    setCurrentPage(1);
+    setIsFilterOpen(false);
   };
 
-  // Filtered data based on the selected filter
   const filteredData = activities.filter((activity) =>
     filter === "Semua" ? true : activity.type === filter
   );
 
-  // Calculate paginated data
   const startIdx = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIdx, startIdx + itemsPerPage);
 
+  // Determine the loading state
+  const loadingCounts = !data && !error;
+  const pendataanCount = data?.pendataanCount ?? 0;
+  const pemeriksaanCount = data?.pemeriksaanCount ?? 0;
+  const pengolahanCount = data?.pengolahanCount ?? 0;
+
   return (
     <div className="w-full text-black">
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Greeting */}
+      <Breadcrumb items={[]} />
       <h1 className="text-2xl font-bold mt-4 text-black">
         {status === "loading" ? (
           <Skeleton width={325} height={24} />
@@ -90,32 +88,42 @@ export default function AdminPage() {
         )}
       </h1>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 w-full">
-        <StatCard
-          title="Total Mitra Pendataan"
-          subtitle="Bulan Ini"
-          value={5}
-          icon={<ClipboardDocumentCheckIcon className="w-6 h-6 text-blue-500" />}
-        />
-        <StatCard
-          title="Total Mitra Pemeriksaan"
-          subtitle="Bulan Ini"
-          value={3}
-          icon={<ClipboardDocumentListIcon className="w-6 h-6 text-green-500" />}
-        />
-        <StatCard
-          title="Total Mitra Pengolahan"
-          subtitle="Bulan Ini"
-          value={2}
-          icon={<ClipboardDocumentIcon className="w-6 h-6 text-yellow-500" />}
-        />
-        <StatCard
-          title="Total Honor Kegiatan"
-          subtitle="Bulan Ini"
-          value="Rp 10.000.000"
-          icon={<CurrencyDollarIcon className="w-6 h-6 text-red-500" />}
-        />
+        {loadingCounts ? (
+          <>
+            <Skeleton height={100} width="100%" />
+            <Skeleton height={100} width="100%" />
+            <Skeleton height={100} width="100%" />
+            <Skeleton height={100} width="100%" />
+          </>
+        ) : (
+          <>
+            <StatCard
+              title="Total Mitra Pendataan"
+              subtitle="Bulan Ini"
+              value={pendataanCount.toString()}
+              icon={<ClipboardDocumentCheckIcon className="w-6 h-6 text-blue-500" />}
+            />
+            <StatCard
+              title="Total Mitra Pemeriksaan"
+              subtitle="Bulan Ini"
+              value={pemeriksaanCount.toString()}
+              icon={<ClipboardDocumentListIcon className="w-6 h-6 text-green-500" />}
+            />
+            <StatCard
+              title="Total Mitra Pengolahan"
+              subtitle="Bulan Ini"
+              value={pengolahanCount.toString()}
+              icon={<ClipboardDocumentIcon className="w-6 h-6 text-yellow-500" />}
+            />
+            <StatCard
+              title="Total Honor Kegiatan"
+              subtitle="Bulan Ini"
+              value="Rp 10.000.000"
+              icon={<CurrencyDollarIcon className="w-6 h-6 text-red-500" />}
+            />
+          </>
+        )}
       </div>
 
       {/* Table Header and Table */}
