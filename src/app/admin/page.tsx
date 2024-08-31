@@ -82,7 +82,11 @@ export default function AdminPage() {
 
       {/* Greeting */}
       <h1 className="text-2xl font-bold mt-4 text-black">
-        Halo, {status === "loading" ? <Skeleton width={100} /> : session?.user?.name || <Skeleton width={100} />}!
+        {status === "loading" ? (
+          <Skeleton width={325} height={24} />
+        ) : (
+          <>Halo, {session?.user?.name}!</>
+        )}
       </h1>
 
       {/* Stat Cards */}
