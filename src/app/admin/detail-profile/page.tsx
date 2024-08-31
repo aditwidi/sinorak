@@ -6,6 +6,8 @@ import Swal from "sweetalert2"; // Import SweetAlert2
 import Breadcrumb from "@/components/Breadcrumb";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { LoadingIndicator } from "@/components/LoadingIndicator"; // Import the LoadingIndicator component
+import Skeleton from "react-loading-skeleton"; // Import the Skeleton component
+import "react-loading-skeleton/dist/skeleton.css"; // Import the Skeleton CSS
 
 interface BreadcrumbItem {
     label: string;
@@ -143,45 +145,60 @@ export default function EditProfilePage() {
                 {/* Detail Profile */}
                 <section>
                     <form className="space-y-4">
+                        {/* Name Field */}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                                 Nama
                             </label>
-                            <input
-                                type="text"
-                                id="name"
-                                value={name}
-                                readOnly
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            {status === "loading" ? (
+                                <Skeleton height={38} style={{ borderRadius: "0.375rem" }} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="name"
+                                    value={name}
+                                    readOnly
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            )}
                         </div>
 
+                        {/* NIP Field */}
                         <div>
                             <label htmlFor="nip" className="block text-sm font-medium text-gray-700">
                                 NIP
                             </label>
-                            <input
-                                type="text"
-                                id="nip"
-                                value={nip}
-                                readOnly
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                            />
+                            {status === "loading" ? (
+                                <Skeleton height={38} style={{ borderRadius: "0.375rem" }} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="nip"
+                                    value={nip}
+                                    readOnly
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            )}
                         </div>
 
+                        {/* Role Field */}
                         <div>
                             <label htmlFor="role" className="block text-sm font-medium text-gray-700">
                                 Role
                             </label>
-                            <select
-                                id="role"
-                                value={role}
-                                onChange={(e) => setRole(e.target.value as "admin" | "user")}
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="admin">Admin</option>
-                                <option value="user">User</option>
-                            </select>
+                            {status === "loading" ? (
+                                <Skeleton height={38} style={{ borderRadius: "0.375rem" }} />
+                            ) : (
+                                <select
+                                    id="role"
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value as "admin" | "user")}
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="admin">Admin</option>
+                                    <option value="user">User</option>
+                                </select>
+                            )}
                         </div>
 
                         {/* Save Role Button */}
@@ -190,7 +207,7 @@ export default function EditProfilePage() {
                             onClick={handleRoleChange}
                             disabled={loadingRoleChange}
                             className="mt-4 w-auto flex justify-center items-center rounded-md bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 relative"
-                            style={{ minWidth: '150px' }} // Adjust the minWidth as needed to match the desired button size
+                            style={{ minWidth: "150px" }}
                         >
                             {loadingRoleChange ? <LoadingIndicator /> : "Simpan Perubahan Role"}
                         </button>

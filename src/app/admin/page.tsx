@@ -12,6 +12,8 @@ import {
   EyeIcon,
   FunnelIcon,
 } from "@heroicons/react/24/outline"; // Updated to include FunnelIcon
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface BreadcrumbItem {
   label: string;
@@ -79,7 +81,7 @@ export default function AdminPage() {
 
       {/* Greeting */}
       <h1 className="text-2xl font-bold mt-4 text-black">
-        Halo, {session?.user?.name || "User"}!
+      Halo, {status === "loading" ? <Skeleton width={100} /> : session?.user?.name || <Skeleton width={100} />}!
       </h1>
 
       {/* Stat Cards */}
