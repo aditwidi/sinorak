@@ -4,7 +4,7 @@ import { db } from "@/lib/db/db"; // Import your database instance
 import { mitra } from "@/lib/db/schema"; // Import your schema
 import { sql } from "drizzle-orm"; // Import the `sql` helper from Drizzle ORM
 
-export const revalidate = 0; // Revalidate every 10 seconds
+export const revalidate = 0; // Revalidate every new data
 
 export async function GET() {
     try {

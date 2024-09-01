@@ -222,7 +222,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                                 : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
-                                            Daftar Kegiatan
+                                            Daftar Semua Kegiatan
                                         </a>
                                     </li>
                                     <li>
@@ -269,7 +269,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                                 : "text-gray-900 hover:bg-gray-100"
                                                 }`}
                                         >
-                                            Daftar Mitra
+                                            Daftar Semua Mitra
                                         </a>
                                     </li>
                                     <li>
