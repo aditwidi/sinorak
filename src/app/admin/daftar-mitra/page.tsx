@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Breadcrumb from "@/components/Breadcrumb";
-import { EyeIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, ChevronLeftIcon, ChevronRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -34,8 +34,8 @@ export default function DaftarMitraPage() {
     const [filterMonth, setFilterMonth] = useState<string>(currentMonth); // Set default to current month
     const [filterYear, setFilterYear] = useState<string>(currentYear); // Set default to current year
     const [filterJenisPetugas, setFilterJenisPetugas] = useState<string>("");
-    const [availableMonths, setAvailableMonths] = useState<number[]>([parseInt(currentMonth)]); // Default current month
-    const [availableYears, setAvailableYears] = useState<number[]>([parseInt(currentYear)]); // Default current year
+    const [availableMonths, setAvailableMonths] = useState<number[]>([parseInt(currentMonth)]); // Default to current month
+    const [availableYears, setAvailableYears] = useState<number[]>([parseInt(currentYear)]); // Default to current year
     const itemsPerPage = 10;
 
     // Define breadcrumb items
@@ -113,8 +113,8 @@ export default function DaftarMitraPage() {
     // Calculate filtered data
     const filteredData = mitraData.filter((mitra) => {
         const matchesSearch = searchTerm ? mitra.nama.toLowerCase().includes(searchTerm.toLowerCase()) : true;
-        const matchesMonth = filterMonth ? new Date().getMonth().toString() === filterMonth : true;
-        const matchesYear = filterYear ? new Date().getFullYear().toString() === filterYear : true;
+        const matchesMonth = filterMonth ? (new Date().getMonth().toString() === filterMonth) : true;
+        const matchesYear = filterYear ? (new Date().getFullYear().toString() === filterYear) : true;
         const matchesJenisPetugas = filterJenisPetugas ? mitra.jenis_petugas === filterJenisPetugas : true;
 
         return matchesSearch && matchesMonth && matchesYear && matchesJenisPetugas;
@@ -138,7 +138,7 @@ export default function DaftarMitraPage() {
                 <div className="mb-2">
                     <input
                         type="text"
-                        placeholder="Cari Nama Mitra"
+                        placeholder="Cari Nama Mitra..."
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -155,7 +155,7 @@ export default function DaftarMitraPage() {
                     >
                         {availableMonths.map((month) => (
                             <option key={month} value={month.toString()}>
-                                {new Date(0, month).toLocaleString("id-ID", { month: "long" })}
+                                {new Date(0, month).toLocaleString("id-ID", { month: "long" })} {/* Using the correct month format */}
                             </option>
                         ))}
                     </select>
@@ -219,17 +219,36 @@ export default function DaftarMitraPage() {
                                                     {mitra.sobat_id}
                                                 </th>
                                                 <td className="px-6 py-4">{mitra.nama}</td>
-                                                <td className="px-6 py-4">{mitra.jenis_petugas}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${mitra.jenis_petugas === "Pendataan" ? "text-blue-800 bg-blue-100" :
+                                                        mitra.jenis_petugas === "Pemeriksaan" ? "text-green-800 bg-green-100" :
+                                                            "text-yellow-800 bg-yellow-100"
+                                                        }`}>
+                                                        {mitra.jenis_petugas}
+                                                    </span>
+                                                </td>
                                                 <td className="px-6 py-4">
                                                     {mitra.honor_bulanan !== null ? `Rp ${mitra.honor_bulanan.toLocaleString()}` : "Rp 0"}
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 space-x-2 flex">
+                                                    {/* Action Icons */}
                                                     <button
                                                         type="button"
-                                                        className="flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+                                                        className="text-green-500 hover:text-green-700"
                                                     >
-                                                        <EyeIcon className="w-4 h-4 mr-2" />
-                                                        Detail
+                                                        <PencilSquareIcon className="w-5 h-5" aria-hidden="true" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="text-blue-500 hover:text-blue-700"
+                                                    >
+                                                        <EyeIcon className="w-5 h-5" aria-hidden="true" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <TrashIcon className="w-5 h-5" aria-hidden="true" />
                                                     </button>
                                                 </td>
                                             </tr>
