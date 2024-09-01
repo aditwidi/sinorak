@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter from next/navigation
 import Breadcrumb from "@/components/Breadcrumb";
 import { EyeIcon, ChevronLeftIcon, ChevronRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
@@ -37,6 +38,8 @@ export default function DaftarMitraPage() {
     const [availableMonths, setAvailableMonths] = useState<number[]>([parseInt(currentMonth)]); // Default to current month
     const [availableYears, setAvailableYears] = useState<number[]>([parseInt(currentYear)]); // Default to current year
     const itemsPerPage = 10;
+
+    const router = useRouter(); // Initialize router
 
     // Define breadcrumb items
     const breadcrumbItems: BreadcrumbItem[] = [
@@ -109,6 +112,11 @@ export default function DaftarMitraPage() {
     };
 
     const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    // Function to handle navigation to the edit page
+    const handleEdit = (sobat_id: string) => {
+        router.push(`/admin/${sobat_id}/edit`); // Navigate to the edit page
+    };
 
     // Calculate filtered data
     const filteredData = mitraData.filter((mitra) => {
@@ -235,6 +243,7 @@ export default function DaftarMitraPage() {
                                                     <button
                                                         type="button"
                                                         className="text-green-500 hover:text-green-700"
+                                                        onClick={() => handleEdit(mitra.sobat_id)} // Update with handleEdit function
                                                     >
                                                         <PencilSquareIcon className="w-5 h-5" aria-hidden="true" />
                                                     </button>
