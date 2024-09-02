@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { sql } from "drizzle-orm"; // Import the `sql` helper from Drizzle ORM
 
+
+export const revalidate = 0;
+
 // Fetch unique months and years from mitra_honor_monthly table
 export async function GET() {
     try {
