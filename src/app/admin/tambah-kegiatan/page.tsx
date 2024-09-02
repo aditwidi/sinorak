@@ -137,8 +137,8 @@ function TambahKegiatanPage() {
         setLoading(true);
     
         try {
-            // First API call to /api/kegiatan-mitra
-            const kegiatanResponse = await fetch("/api/kegiatan-mitra", {
+            // First API call to create kegiatan
+            const kegiatanResponse = await fetch("/api/kegiatan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -149,8 +149,6 @@ function TambahKegiatanPage() {
                     tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                     penanggung_jawab: penanggungJawab,
                     satuan_honor: satuanHonor,
-                    mitra_entries: mitraEntries,
-                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
                 }),
             });
     
@@ -165,7 +163,31 @@ function TambahKegiatanPage() {
                 return;
             }
     
-            // Second API call to /api/mitra-honor-monthly
+            const kegiatan_id = kegiatanData.kegiatan_id;
+    
+            // Second API call to add mitra entries
+            const mitraResponse = await fetch("/api/kegiatan-mitra", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    kegiatan_id,
+                    mitra_entries: mitraEntries,
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
+                }),
+            });
+    
+            const mitraData = await mitraResponse.json();
+    
+            if (!mitraResponse.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: mitraData.error || "Terjadi kesalahan saat menambahkan mitra ke kegiatan.",
+                });
+                return;
+            }
+    
+            // Third API call to update honor for mitra
             const honorResponse = await fetch("/api/mitra-honor-monthly", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -202,7 +224,8 @@ function TambahKegiatanPage() {
         } finally {
             setLoading(false);
         }
-    };    
+    };
+    
 
     const mitraOptions: Mitra[] = mitras.map((mitra) => ({
         sobat_id: mitra.sobat_id,
