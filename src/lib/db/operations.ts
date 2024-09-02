@@ -1,4 +1,4 @@
-// lib/db/operations.ts
+// lib/db/db/operations.ts
 import { db } from "./db";
 import { users, roles, mitra } from "./schema";
 import { eq } from "drizzle-orm";

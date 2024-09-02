@@ -9,7 +9,9 @@ export const metadata = {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <ClientLayout>
-      {children} {/* Pass children to the client layout */}
+      <div className="bg-gray-50 min-h-screen"> {/* Set the background to off-white */}
+        {children} {/* Pass children to the client layout */}
+      </div>
     </ClientLayout>
   );
 }

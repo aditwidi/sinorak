@@ -1,3 +1,4 @@
+// lib/db/db/schema.ts
 import { 
   sqliteTable, 
   integer, 
