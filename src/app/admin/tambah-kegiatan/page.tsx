@@ -135,39 +135,63 @@ function TambahKegiatanPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
+    
         try {
-            const response = await fetch("/api/tambah-kegiatan", {
+            // First API call to /api/kegiatan-mitra
+            const kegiatanResponse = await fetch("/api/kegiatan-mitra", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     nama_kegiatan: namaKegiatan,
                     kode,
                     jenis_kegiatan: jenisKegiatan,
-                    tanggal_mulai: tanggalMulai ? tanggalMulai.toISOString().split("T")[0] : "", // Convert to yyyy-mm-dd
-                    tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "", // Convert to yyyy-mm-dd
+                    tanggal_mulai: tanggalMulai ? tanggalMulai.toISOString().split("T")[0] : "",
+                    tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                     penanggung_jawab: penanggungJawab,
                     satuan_honor: satuanHonor,
                     mitra_entries: mitraEntries,
                     honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
                 }),
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
+    
+            const kegiatanData = await kegiatanResponse.json();
+    
+            if (!kegiatanResponse.ok) {
                 Swal.fire({
                     icon: "error",
                     title: "Error",
-                    text: data.error || "Terjadi kesalahan saat menambahkan kegiatan.",
+                    text: kegiatanData.error || "Terjadi kesalahan saat menambahkan kegiatan.",
+                });
+                return;
+            }
+    
+            // Second API call to /api/mitra-honor-monthly
+            const honorResponse = await fetch("/api/mitra-honor-monthly", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    mitra_entries: mitraEntries,
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
+                    tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
+                }),
+            });
+    
+            const honorData = await honorResponse.json();
+    
+            if (!honorResponse.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: honorData.error || "Terjadi kesalahan saat mengupdate honor mitra.",
                 });
             } else {
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil",
-                    text: "Kegiatan berhasil ditambahkan.",
+                    text: "Kegiatan dan honor mitra berhasil ditambahkan.",
                 });
             }
+    
         } catch (error) {
             console.error("Error:", error);
             Swal.fire({
@@ -178,7 +202,7 @@ function TambahKegiatanPage() {
         } finally {
             setLoading(false);
         }
-    };
+    };    
 
     const mitraOptions: Mitra[] = mitras.map((mitra) => ({
         sobat_id: mitra.sobat_id,

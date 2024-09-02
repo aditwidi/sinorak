@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { kegiatan, kegiatan_mitra, mitra_honor_monthly, users, mitra } from '@/lib/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, inArray } from 'drizzle-orm';
 
 // Define TypeScript interface for mitra entry
 interface MitraEntry {
@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        // Fetch penanggung_jawab ID
         const userResult = await db.select({ id: users.id }).from(users).where(eq(users.name, penanggung_jawab)).all();
         if (userResult.length === 0) {
             return NextResponse.json({ error: 'Penanggung jawab does not exist' }, { status: 400 });
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
         const month = endDate.getMonth() + 1;
         const year = endDate.getFullYear();
 
+        // Remove explicit transaction handling from your migration logic
         const kegiatanResult = await db.insert(kegiatan).values({
             nama_kegiatan, kode, jenis_kegiatan, tanggal_mulai,
             tanggal_berakhir, penanggung_jawab, satuan_honor, month, year,
@@ -39,48 +41,54 @@ export async function POST(req: NextRequest) {
 
         const kegiatan_id = kegiatanResult[0]?.kegiatan_id;
         if (!kegiatan_id) {
-            return NextResponse.json({ error: 'Failed to insert kegiatan' }, { status: 500 });
+            throw new Error('Failed to insert kegiatan');
         }
 
-        // Batch insert all kegiatan_mitra entries with correct typing
-        const kegiatanMitraValues = mitra_entries.map((entry: MitraEntry) => {
-            const { sobat_id, target_volume_pekerjaan } = entry;
-            const total_honor = parseFloat(honor_satuan) * target_volume_pekerjaan;
-            return {
-                kegiatan_id, sobat_id, honor_satuan: parseFloat(honor_satuan),
-                target_volume_pekerjaan, total_honor,
-            };
-        });
-
+        // Batch insert all kegiatan_mitra entries
+        const kegiatanMitraValues = mitra_entries.map((entry: MitraEntry) => ({
+            kegiatan_id,
+            sobat_id: entry.sobat_id,
+            honor_satuan: parseFloat(honor_satuan),
+            target_volume_pekerjaan: entry.target_volume_pekerjaan,
+            total_honor: parseFloat(honor_satuan) * entry.target_volume_pekerjaan,
+        }));
         await db.insert(kegiatan_mitra).values(kegiatanMitraValues).run();
 
-        // Prepare batch operations for mitra_honor_monthly
-        const updates = []; // To store update queries
-        const inserts = []; // To store insert data
+        // Fetch all existing entries for mitra_honor_monthly in a single query
+        const sobatIds = mitra_entries.map((entry: MitraEntry) => entry.sobat_id);
+        const existingHonors = await db
+            .select()
+            .from(mitra_honor_monthly)
+            .where(
+                and(
+                    inArray(mitra_honor_monthly.sobat_id, sobatIds),
+                    eq(mitra_honor_monthly.month, month),
+                    eq(mitra_honor_monthly.year, year)
+                )
+            )
+            .all();
 
+        // Ensure all keys are non-null
+        const existingMap = new Map<string, number>(
+            existingHonors
+                .filter(honor => honor.sobat_id !== null) // Filter out null values
+                .map(honor => [honor.sobat_id!, honor.total_honor]) // Use non-null assertion `!`
+        );
+
+        const updates = [];
+        const inserts = [];
+
+        // Batch operations for mitra_honor_monthly
         for (const entry of mitra_entries) {
             const { sobat_id, target_volume_pekerjaan } = entry;
             const total_honor = parseFloat(honor_satuan) * target_volume_pekerjaan;
 
-            // Check if there is already an entry for the given sobat_id, month, and year
-            const existingMitraHonor = await db
-                .select()
-                .from(mitra_honor_monthly)
-                .where(
-                    and(
-                        eq(mitra_honor_monthly.sobat_id, sobat_id),
-                        eq(mitra_honor_monthly.month, month),
-                        eq(mitra_honor_monthly.year, year)
-                    )
-                )
-                .all();
-
-            if (existingMitraHonor.length > 0) {
-                // Prepare update statement for the existing entry
+            if (existingMap.has(sobat_id)) {
+                // Prepare update statement
                 updates.push(
                     db
                         .update(mitra_honor_monthly)
-                        .set({ total_honor: existingMitraHonor[0].total_honor + total_honor }) // Increment total_honor
+                        .set({ total_honor: existingMap.get(sobat_id)! + total_honor }) // Increment total_honor
                         .where(
                             and(
                                 eq(mitra_honor_monthly.sobat_id, sobat_id),
@@ -102,9 +110,7 @@ export async function POST(req: NextRequest) {
 
         // Batch execute all updates
         if (updates.length > 0) {
-            for (const update of updates) {
-                await update.run();
-            }
+            await Promise.all(updates.map(update => update.run()));
         }
 
         // Batch insert all new entries
