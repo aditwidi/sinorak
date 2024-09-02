@@ -54,8 +54,15 @@ export default function DaftarMitraPage() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    setAvailableMonths(data.months.length > 0 ? data.months : [parseInt(currentMonth)]);
-                    setAvailableYears(data.years.length > 0 ? data.years : [parseInt(currentYear)]);
+                    const months = data.months.length > 0 ? data.months : [parseInt(currentMonth)];
+                    const years = data.years.length > 0 ? data.years : [parseInt(currentYear)];
+
+                    setAvailableMonths(months);
+                    setAvailableYears(years);
+
+                    // Set the smallest month and year as the default filter
+                    setFilterMonth(Math.min(...months).toString());
+                    setFilterYear(Math.min(...years).toString());
                 } else {
                     console.error("Failed to fetch available months and years:", data.error);
                 }
