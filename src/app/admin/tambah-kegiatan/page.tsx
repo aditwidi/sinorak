@@ -402,7 +402,7 @@ function TambahKegiatanPage() {
                         </div>
 
                         {/* Submit Button at the End */}
-                        <div className="md:col-span-2 flex justify-end mt-4">
+                        <div className="md:col-span-2 flex justify-end pb-4">
                             <button
                                 type="submit"
                                 disabled={loading}
