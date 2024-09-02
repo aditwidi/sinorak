@@ -97,7 +97,7 @@ function TambahKegiatanPage() {
     };
 
     const handleHonorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^0-9]/g, ""); // Remove non-numeric characters
+        const value = e.target.value.replace(/[^\d]/g, ""); // // Remove all non-numeric characters except for numbers
         const formattedValue = formatCurrency(value);
         setHonorSatuan(formattedValue); // Update state with formatted value
     };
@@ -149,7 +149,7 @@ function TambahKegiatanPage() {
                     penanggung_jawab: penanggungJawab,
                     satuan_honor: satuanHonor,
                     mitra_entries: mitraEntries,
-                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d.-]/g, "")), // Convert back to number
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
                 }),
             });
 
@@ -166,8 +166,6 @@ function TambahKegiatanPage() {
                     icon: "success",
                     title: "Berhasil",
                     text: "Kegiatan berhasil ditambahkan.",
-                }).then(() => {
-                    router.push("/admin/kegiatan");
                 });
             }
         } catch (error) {

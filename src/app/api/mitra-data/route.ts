@@ -1,16 +1,13 @@
-// app/api/mitra-data/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { mitra, mitra_honor_monthly } from "@/lib/db/schema"; // Import your schema
-import { eq, sql, and, like, isNull, or } from "drizzle-orm";
+import { eq, sql, and, like, or } from "drizzle-orm";
 
-// Set revalidation to happen every time new data is fetched
 export const revalidate = 0; // Revalidate every new data
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
-    // Extract query parameters
     const searchTerm = searchParams.get("searchTerm") || "";
     const filterMonth = searchParams.get("filterMonth") || "";
     const filterYear = searchParams.get("filterYear") || "";
@@ -18,55 +15,54 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
-    // Calculate offset for pagination
     const offset = (page - 1) * pageSize;
 
-    // Build dynamic filter conditions
     const filters = [];
     if (searchTerm) filters.push(like(mitra.nama, `%${searchTerm}%`));
-    if (filterJenisPetugas) filters.push(eq(mitra.jenis_petugas, filterJenisPetugas as "Pendataan" | "Pemeriksaan" | "Pengolahan"));
+    if (filterJenisPetugas) filters.push(eq(mitra.jenis_petugas, filterJenisPetugas));
 
-    // We adjust month and year filters to handle cases where `mitra_honor_monthly` has no entries
-    if (filterMonth) {
-        filters.push(or(isNull(mitra_honor_monthly.month), eq(sql`CAST(strftime('%m', ${mitra_honor_monthly.month}) AS TEXT)`, filterMonth)));
-    }
-    if (filterYear) {
-        filters.push(or(isNull(mitra_honor_monthly.year), eq(sql`CAST(strftime('%Y', ${mitra_honor_monthly.year}) AS TEXT)`, filterYear)));
-    }
+    // Apply filters for month and year if specified
+    const monthYearFilter = filterMonth && filterYear
+        ? and(
+            eq(mitra_honor_monthly.month, parseInt(filterMonth)),
+            eq(mitra_honor_monthly.year, parseInt(filterYear))
+          )
+        : sql`1 = 1`; // No filtering if month and year are not specified
 
     try {
-        // Fetch filtered mitra data with pagination
-        const mitraData = await db
+        // Fetch mitra data with honor and handle cases where there is no matching data for month and year
+        let mitraData = await db
             .select({
                 sobat_id: mitra.sobat_id,
                 nama: mitra.nama,
                 jenis_petugas: mitra.jenis_petugas,
-                honor_bulanan: sql<number | null>`COALESCE(${mitra_honor_monthly.total_honor}, 0)`.as("honor_bulanan"), // Use COALESCE to handle nulls
+                honor_bulanan: sql<number | null>`COALESCE(MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.total_honor} ELSE 0 END), 0)`.as("honor_bulanan"),
+                month: sql<number | null>`MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.month} ELSE NULL END)`.as("month"),
+                year: sql<number | null>`MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.year} ELSE NULL END)`.as("year")
             })
             .from(mitra)
             .leftJoin(mitra_honor_monthly, eq(mitra.sobat_id, mitra_honor_monthly.sobat_id))
             .where(and(...filters))
+            .groupBy(mitra.sobat_id)
             .limit(pageSize)
             .offset(offset)
             .all();
 
-        // Fetch total count for pagination
+        // Count total distinct mitra
         const totalCountResult = await db
-            .select({ count: sql<number>`COUNT(*)` })
+            .select({ count: sql<number>`COUNT(DISTINCT ${mitra.sobat_id})` }) 
             .from(mitra)
             .leftJoin(mitra_honor_monthly, eq(mitra.sobat_id, mitra_honor_monthly.sobat_id))
             .where(and(...filters))
             .get();
 
-        const totalCount = totalCountResult?.count || 0; // Ensure totalCountResult is defined
+        const totalCount = totalCountResult?.count || 0;
 
-        // Create response with revalidation headers
         const response = NextResponse.json(
             { mitraData, totalCount },
             { status: 200 }
         );
 
-        // Apply server-side caching instructions for revalidation
         response.headers.set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
 
         return response;

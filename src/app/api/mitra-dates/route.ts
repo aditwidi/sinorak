@@ -1,4 +1,3 @@
-// /app/api/mitra-dates/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { sql } from "drizzle-orm"; // Import the `sql` helper from Drizzle ORM
@@ -8,19 +7,21 @@ export async function GET() {
     try {
         // Fetch unique months using raw SQL
         const monthsResult = await db
-            .select({ month: sql<number>`DISTINCT month` }) // Correct SQL syntax for distinct selection
-            .from(sql`mitra_honor_monthly`) // Specify the table explicitly using raw SQL
+            .select({ month: sql<number>`DISTINCT month` })
+            .from(sql`mitra_honor_monthly`)
+            .where(sql`month IS NOT NULL`) // Ensure month is not null
             .all();
 
         // Fetch unique years using raw SQL
         const yearsResult = await db
             .select({ year: sql<number>`DISTINCT year` })
             .from(sql`mitra_honor_monthly`)
+            .where(sql`year IS NOT NULL`) // Ensure year is not null
             .all();
 
         // Extract months and years from the results
-        const months = monthsResult.map((row: any) => row.month);
-        const years = yearsResult.map((row: any) => row.year);
+        const months = monthsResult.map((row: { month: number }) => row.month);
+        const years = yearsResult.map((row: { year: number }) => row.year);
 
         const response = NextResponse.json(
             { months, years },
