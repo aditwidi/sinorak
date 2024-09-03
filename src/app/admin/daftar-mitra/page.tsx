@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
+import Swal from "sweetalert2";
 import { EyeIcon, ChevronLeftIcon, ChevronRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -125,12 +126,45 @@ export default function DaftarMitraPage() {
         router.push(`/admin/${sobat_id}/detail`);
     };
 
+    const handleDelete = async (sobat_id: string) => {
+        const result = await Swal.fire({
+            title: "Konfirmasi",
+            text: "Apakah Anda yakin ingin menghapus data mitra ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Hapus",
+            cancelButtonText: "Batal",
+            cancelButtonColor: "#DC3545"
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const response = await fetch(`/api/delete-mitra?sobat_id=${sobat_id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                Swal.fire("Berhasil", "Data mitra berhasil dihapus", "success");
+                setMitraData((prevData) => prevData.filter((mitra) => mitra.sobat_id !== sobat_id));
+                setTotalCount((prevCount) => prevCount - 1);
+            } else {
+                const errorData = await response.json();
+                console.error("Failed to delete mitra:", errorData.error);
+                Swal.fire("Gagal", "Gagal menghapus data mitra.", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting mitra:", error);
+            Swal.fire("Kesalahan", "Terjadi kesalahan saat menghapus data mitra.", "error");
+        }
+    };
 
     return (
         <div className="w-full text-black">
             <Breadcrumb items={breadcrumbItems} />
             <h1 className="text-2xl font-bold mt-4 text-black">Data Mitra Statistik BPS Kota Bekasi</h1>
 
+            {/* Filters and Search */}
             <div className="mt-4 mb-2">
                 <div className="mb-2">
                     <input
@@ -142,6 +176,7 @@ export default function DaftarMitraPage() {
                     />
                 </div>
 
+                {/* Filters for month, year, and jenis petugas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                     <select
                         className="border border-gray-300 rounded px-3 py-2 focus:outline-none"
@@ -168,6 +203,7 @@ export default function DaftarMitraPage() {
                     </select>
                 </div>
 
+                {/* Filter by jenis petugas */}
                 <div className="mb-2">
                     <select
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none"
@@ -182,6 +218,7 @@ export default function DaftarMitraPage() {
                 </div>
             </div>
 
+            {/* Data Table */}
             <div className="pb-0">
                 <div className="relative shadow-md sm:rounded-lg mt-0">
                     <div className="overflow-x-auto">
@@ -240,6 +277,7 @@ export default function DaftarMitraPage() {
                                                     <button
                                                         type="button"
                                                         className="text-red-500 hover:text-red-700"
+                                                        onClick={() => handleDelete(mitra.sobat_id)}
                                                     >
                                                         <TrashIcon className="w-5 h-5" aria-hidden="true" />
                                                     </button>
@@ -253,6 +291,7 @@ export default function DaftarMitraPage() {
                     </div>
                 </div>
 
+                {/* Pagination */}
                 <div className="relative bg-white rounded-b-lg shadow-md mt-0">
                     <nav
                         className="flex flex-wrap items-center justify-between p-4 border-t border-gray-200"

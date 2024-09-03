@@ -1,6 +1,6 @@
 // lib/db/db/operations.ts
 import { db } from "./db";
-import { users, roles, mitra } from "./schema";
+import { users, roles, mitra, mitra_honor_monthly, kegiatan_mitra } from "./schema";
 import { eq } from "drizzle-orm";
 import { saltAndHashPassword } from "@/utils/password";
 
@@ -104,4 +104,18 @@ export async function createMitra(data: {
   }).run();
 
   return result;
+}
+
+export async function deleteMitra(sobat_id: string) {
+  try {
+      // Delete related records in the correct order without using explicit transactions
+      await db.delete(mitra_honor_monthly).where(eq(mitra_honor_monthly.sobat_id, sobat_id));
+      await db.delete(kegiatan_mitra).where(eq(kegiatan_mitra.sobat_id, sobat_id));
+      await db.delete(mitra).where(eq(mitra.sobat_id, sobat_id));
+
+      console.log(`Successfully deleted mitra with sobat_id: ${sobat_id}`);
+  } catch (error) {
+      console.error("Failed to delete mitra and related data:", error);
+      throw new Error("Could not delete mitra and related data.");
+  }
 }
