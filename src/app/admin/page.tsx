@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [pendataanCount, setPendataanCount] = useState<number>(0);
   const [pemeriksaanCount, setPemeriksaanCount] = useState<number>(0);
   const [pengolahanCount, setPengolahanCount] = useState<number>(0);
+  const [totalHonor, setTotalHonor] = useState<number>(0); // State for total honor
   const [loadingCounts, setLoadingCounts] = useState<boolean>(true);
 
   const breadcrumbItems: BreadcrumbItem[] = [];
@@ -85,6 +86,27 @@ export default function AdminPage() {
 
     fetchKegiatanData();
   }, [currentMonth, currentYear]); // Run effect when component mounts or current month/year changes
+
+  // Fetch total honor on component mount
+useEffect(() => {
+  const fetchTotalHonor = async () => {
+    try {
+      const response = await fetch("/api/total-honor-count");
+      const data = await response.json();
+
+      if (response.ok) {
+        setTotalHonor(data.totalHonor ?? 0);
+      } else {
+        console.error("Failed to fetch total honor:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching total honor:", error);
+    }
+  };
+
+  fetchTotalHonor();
+}, []);
+
 
   // Calculate paginated data
   const filteredData = activities.filter((activity) =>
@@ -183,7 +205,7 @@ export default function AdminPage() {
             <StatCard
               title="Total Honor Kegiatan"
               subtitle="Bulan Ini"
-              value="Rp 10.000.000"
+              value={`Rp ${totalHonor.toLocaleString('id-ID')}`}
               icon={<CurrencyDollarIcon className="w-6 h-6 text-red-500" />}
             />
           </>
