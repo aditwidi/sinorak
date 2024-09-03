@@ -399,6 +399,11 @@ function TambahKegiatanPage() {
                                 <option value="OB">OB</option>
                                 <option value="BS">BS</option>
                                 <option value="Rumah Tangga">Rumah Tangga</option>
+                                <option value="Pasar">Pasar</option>
+                                <option value="Keluarga">Keluarga</option>
+                                <option value="SLS">SLS</option>
+                                <option value="Desa">Desa</option>
+                                <option value="Responden">Responden</option>
                             </select>
                         </div>
 

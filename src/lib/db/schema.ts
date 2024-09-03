@@ -44,7 +44,7 @@ export const kegiatan = sqliteTable("kegiatan", {
   month: integer("month").notNull(),
   year: integer("year").notNull(),
   penanggung_jawab: integer("penanggung_jawab").references(() => users.id), // Foreign key to users table
-  satuan_honor: text("satuan_honor").$type<"Dokumen" | "OB" | "BS" | "Rumah Tangga">().notNull(), // Simulating ENUM
+  satuan_honor: text("satuan_honor").$type<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">().notNull(), // Simulating ENUM
 });
 
 // Kegiatan_Mitra Table
