@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2"; // Import SweetAlert2
 import Breadcrumb from "@/components/Breadcrumb"; // Import Breadcrumb component
 import { LoadingIndicator } from "@/components/LoadingIndicator"; // Import LoadingIndicator component
@@ -15,7 +16,7 @@ interface BreadcrumbItem {
 
 export default function TambahMitraPage() {
     const { data: session, status } = useSession(); // Get session data
-
+    const router = useRouter();
     // State for form fields
     const [sobatId, setSobatId] = useState(""); // Corresponds to 'sobat_id' in schema
     const [nik, setNik] = useState(""); // Corresponds to 'nik' in schema
@@ -49,10 +50,10 @@ export default function TambahMitraPage() {
 
     const handleNamaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^[a-zA-Z\s]*$/.test(value)) { // Only allow letters and spaces
+        if (/^[a-zA-Z\s.,-]*$/.test(value)) { // Allow letters, spaces, periods, commas, and hyphens
             setNama(value);
         }
-    };
+    };    
 
     const handlePekerjaanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, ""); // Remove special characters
@@ -98,6 +99,8 @@ export default function TambahMitraPage() {
                     icon: "success",
                     title: "Berhasil",
                     text: "Mitra berhasil ditambahkan.",
+                }).then(() => {
+                    router.push("/admin/daftar-mitra"); // Redirect back to the main page after success
                 });
                 
                 // Clear the form fields after successful submission

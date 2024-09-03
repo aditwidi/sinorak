@@ -121,22 +121,6 @@ export default function DaftarMitraPage() {
         router.push(`/admin/${sobat_id}/edit`);
     };
 
-    // Updated filtering logic
-    const filteredData = mitraData.filter((mitra) => {
-        const matchesSearch = searchTerm ? mitra.nama.toLowerCase().includes(searchTerm.toLowerCase()) : true;
-        const matchesJenisPetugas = filterJenisPetugas ? mitra.jenis_petugas === filterJenisPetugas : true;
-
-        // Filter honor_bulanan by month and year; include all if month or year is null
-        const matchesMonthYear =
-            (mitra.month === null && mitra.year === null) ||
-            (filterMonth && filterYear && mitra.month?.toString() === filterMonth && mitra.year?.toString() === filterYear);
-
-        return matchesSearch && matchesJenisPetugas && matchesMonthYear;
-    });
-
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    const paginatedData = filteredData.slice(startIdx, startIdx + itemsPerPage);
-
     return (
         <div className="w-full text-black">
             <Breadcrumb items={breadcrumbItems} />
@@ -210,12 +194,12 @@ export default function DaftarMitraPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {paginatedData.length === 0 ? (
+                                    {mitraData.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="text-center py-4">Belum ada data mitra</td>
                                         </tr>
                                     ) : (
-                                        paginatedData.map((mitra, index) => (
+                                        mitraData.map((mitra, index) => (
                                             <tr key={index} className="bg-white border-b hover:bg-gray-50">
                                                 <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                                     {mitra.sobat_id}
@@ -223,8 +207,8 @@ export default function DaftarMitraPage() {
                                                 <td className="px-6 py-4">{mitra.nama}</td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${mitra.jenis_petugas === "Pendataan" ? "text-blue-800 bg-blue-100" :
-                                                            mitra.jenis_petugas === "Pemeriksaan" ? "text-green-800 bg-green-100" :
-                                                                "text-yellow-800 bg-yellow-100"
+                                                        mitra.jenis_petugas === "Pemeriksaan" ? "text-green-800 bg-green-100" :
+                                                            "text-yellow-800 bg-yellow-100"
                                                         }`}>
                                                         {mitra.jenis_petugas}
                                                     </span>
@@ -268,7 +252,7 @@ export default function DaftarMitraPage() {
                         aria-label="Table navigation"
                     >
                         <span className="text-sm font-normal text-gray-500">
-                            Menampilkan <span className="font-semibold">{startIdx + 1}-{Math.min(startIdx + itemsPerPage, filteredData.length)}</span> dari{" "}
+                            Menampilkan <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalCount)}</span> dari{" "}
                             <span className="font-semibold">{totalCount}</span>
                         </span>
                         <ul className="inline-flex items-center -space-x-px ml-auto">

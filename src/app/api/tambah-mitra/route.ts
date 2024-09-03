@@ -18,7 +18,7 @@ const mitraSchema = z.object({
     jenis_petugas: z.enum(["Pendataan", "Pemeriksaan", "Pengolahan"]),
     nama: z
         .string()
-        .regex(/^[a-zA-Z\s]*$/, "Nama must contain only letters and spaces")
+        .regex(/^[a-zA-Z\s.,-]*$/, "Nama must contain only letters and spaces")
         .min(1, "Nama is required")
         .max(100, "Nama cannot exceed 100 characters"),
     pekerjaan: z

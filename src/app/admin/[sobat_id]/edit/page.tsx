@@ -82,7 +82,7 @@ export default function EditMitraPage() {
 
     const handleNamaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^[a-zA-Z\s]*$/.test(value)) {
+        if (/^[a-zA-Z\s.,-]*$/.test(value)) {
             // Only allow letters and spaces
             setNama(value);
         }
