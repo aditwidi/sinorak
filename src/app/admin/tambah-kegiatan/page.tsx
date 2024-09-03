@@ -11,7 +11,7 @@ import Select, { components, DropdownIndicatorProps, StylesConfig } from "react-
 import DatePicker from "react-datepicker"; // Import react-datepicker
 import "react-datepicker/dist/react-datepicker.css"; // Import datepicker CSS
 import { registerLocale } from "react-datepicker";
-import { id } from "date-fns/locale/id"; 
+import { id } from "date-fns/locale/id";
 import { format } from "date-fns";
 
 // Register Indonesian locale for react-datepicker
@@ -25,11 +25,19 @@ interface BreadcrumbItem {
 interface Mitra {
     sobat_id: string;
     nama: string;
+    jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
 }
 
 interface MitraEntry {
     sobat_id: string;
     target_volume_pekerjaan: number | string; // Allow both number and string
+    total_honor?: number; // Optional field to store total honor
+    jenis_petugas?: string; // Add jenis_petugas to track the type of staff
+}
+
+interface HonorLimit {
+    jenis_petugas: string;
+    honor_max: number;
 }
 
 function TambahKegiatanPage() {
@@ -43,13 +51,14 @@ function TambahKegiatanPage() {
     const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null); // Use Date type
     const [tanggalBerakhir, setTanggalBerakhir] = useState<Date | null>(null); // Use Date type
     const [penanggungJawab, setPenanggungJawab] = useState<string>("");
-    const [satuanHonor, setSatuanHonor] = useState<"Dokumen" | "OB" | "BS" | "Rumah Tangga">("Dokumen");
+    const [satuanHonor, setSatuanHonor] = useState<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">("Dokumen");
     const [loading, setLoading] = useState(false);
     const [mitras, setMitras] = useState<Mitra[]>([]);
     const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([{ sobat_id: "", target_volume_pekerjaan: "" }]); // Initialized with empty string
     const [honorSatuan, setHonorSatuan] = useState<string>(""); // Handle as a formatted string
     const [month, setMonth] = useState<number | null>(null);
     const [year, setYear] = useState<number | null>(null);
+    const [honorLimits, setHonorLimits] = useState<HonorLimit[]>([]);
 
     const breadcrumbItems: BreadcrumbItem[] = [
         { label: "Kegiatan Statistik" },
@@ -59,10 +68,15 @@ function TambahKegiatanPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Fetch mitras
                 const mitrasResponse = await fetch("/api/mitra-data");
                 const mitrasData = await mitrasResponse.json();
-
                 if (mitrasResponse.ok) setMitras(mitrasData.mitraData);
+
+                // Fetch honor limits
+                const honorLimitResponse = await fetch("/api/honor-limits");
+                const honorLimitData = await honorLimitResponse.json();
+                if (honorLimitResponse.ok) setHonorLimits(honorLimitData.honorLimits);
 
                 if (session?.user) {
                     setPenanggungJawab(session.user.name || "");
@@ -84,15 +98,51 @@ function TambahKegiatanPage() {
         }
     }, [tanggalBerakhir]);
 
-    const handleMitraChange = (index: number, sobat_id: string) => {
+    const handleMitraChange = async (index: number, sobat_id: string) => {
         const newMitraEntries = [...mitraEntries];
+        const selectedMitra = mitras.find(mitra => mitra.sobat_id === sobat_id);
+
         newMitraEntries[index].sobat_id = sobat_id;
+        newMitraEntries[index].jenis_petugas = selectedMitra?.jenis_petugas; // Set jenis_petugas for the selected mitra
         setMitraEntries(newMitraEntries);
+
+        // Fetch current honor for the mitra based on month and year
+        if (month && year && sobat_id) {
+            const honorResponse = await fetch(`/api/get-mitra-honor?sobat_id=${sobat_id}&month=${month}&year=${year}`);
+            const honorData = await honorResponse.json();
+
+            if (honorResponse.ok && honorData.total_honor) {
+                // Store the current honor in the mitra entry
+                newMitraEntries[index].total_honor = honorData.total_honor;
+                setMitraEntries(newMitraEntries);
+            } else {
+                newMitraEntries[index].total_honor = 0; // Default to 0 if no data is found
+                setMitraEntries(newMitraEntries);
+            }
+        }
     };
 
     const handleVolumeChange = (index: number, volume: string) => {
         const newMitraEntries = [...mitraEntries];
-        newMitraEntries[index].target_volume_pekerjaan = volume === "" ? "" : parseInt(volume, 10); // Allow empty input or a valid number
+        newMitraEntries[index].target_volume_pekerjaan = volume === "" ? "" : parseInt(volume, 10);
+
+        // Check honor limit
+        const jenisPetugas = newMitraEntries[index].jenis_petugas; // Use jenis_petugas from the mitra entry
+        const honorLimit = honorLimits.find(limit => limit.jenis_petugas === jenisPetugas);
+
+        if (honorLimit) {
+            const currentHonor = newMitraEntries[index].total_honor || 0;
+            const newHonor = currentHonor + parseFloat(honorSatuan.replace(/[^\d]/g, "")) * parseInt(volume || "0", 10);
+
+            if (newHonor > honorLimit.honor_max) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Peringatan",
+                    text: `Honor untuk mitra jenis ${jenisPetugas} ini melebihi batas maksimum sebesar Rp ${honorLimit.honor_max}.`,
+                });
+            }
+        }
+
         setMitraEntries(newMitraEntries);
     };
 
@@ -105,8 +155,8 @@ function TambahKegiatanPage() {
     const handleDateChange = (setter: React.Dispatch<React.SetStateAction<Date | null>>) => (date: Date | null) => {
         setter(date); // Set the date directly
     };
-    
-    
+
+
     // Function to format number to Indonesian Rupiah format
     const formatCurrency = (value: string) => {
         if (!value) return "Rp "; // Handle empty input
@@ -130,12 +180,38 @@ function TambahKegiatanPage() {
     const getAvailableMitras = (selectedSobatIds: string[]) => {
         return mitras.filter(mitra => !selectedSobatIds.includes(mitra.sobat_id));
     };
-    
+
+    // Fungsi untuk memeriksa apakah ada mitra yang melebihi batas honor maksimum
+    const checkMitraHonorExceedsLimit = () => {
+        for (const entry of mitraEntries) {
+            const honorLimit = honorLimits.find(limit => limit.jenis_petugas === entry.jenis_petugas);
+            if (honorLimit) {
+                const currentHonor = entry.total_honor || 0;
+                const newHonor = currentHonor + parseFloat(honorSatuan.replace(/[^\d]/g, "")) * (parseInt(entry.target_volume_pekerjaan as string, 10) || 0);
+
+                if (newHonor > honorLimit.honor_max) {
+                    return true; // Ada mitra yang melebihi batas honor maksimum
+                }
+            }
+        }
+        return false; // Tidak ada mitra yang melebihi batas honor maksimum
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-    
+
+        // Periksa apakah ada mitra yang melebihi batas honor maksimum
+        if (checkMitraHonorExceedsLimit()) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Terdapat mitra yang melebihi batas honor maksimum! Periksa kembali data yang dimasukkan.",
+            });
+            setLoading(false); // Stop loading
+            return; // Hentikan proses submit
+        }
+
         try {
             // First API call to create kegiatan
             const kegiatanResponse = await fetch("/api/kegiatan", {
@@ -151,9 +227,9 @@ function TambahKegiatanPage() {
                     satuan_honor: satuanHonor,
                 }),
             });
-    
+
             const kegiatanData = await kegiatanResponse.json();
-    
+
             if (!kegiatanResponse.ok) {
                 Swal.fire({
                     icon: "error",
@@ -162,9 +238,9 @@ function TambahKegiatanPage() {
                 });
                 return;
             }
-    
+
             const kegiatan_id = kegiatanData.kegiatan_id;
-    
+
             // Second API call to add mitra entries
             const mitraResponse = await fetch("/api/kegiatan-mitra", {
                 method: "POST",
@@ -175,9 +251,9 @@ function TambahKegiatanPage() {
                     honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
                 }),
             });
-    
+
             const mitraData = await mitraResponse.json();
-    
+
             if (!mitraResponse.ok) {
                 Swal.fire({
                     icon: "error",
@@ -186,7 +262,7 @@ function TambahKegiatanPage() {
                 });
                 return;
             }
-    
+
             // Third API call to update honor for mitra
             const honorResponse = await fetch("/api/mitra-honor-monthly", {
                 method: "POST",
@@ -197,9 +273,9 @@ function TambahKegiatanPage() {
                     tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                 }),
             });
-    
+
             const honorData = await honorResponse.json();
-    
+
             if (!honorResponse.ok) {
                 Swal.fire({
                     icon: "error",
@@ -213,7 +289,7 @@ function TambahKegiatanPage() {
                     text: "Kegiatan dan honor mitra berhasil ditambahkan.",
                 });
             }
-    
+
         } catch (error) {
             console.error("Error:", error);
             Swal.fire({
@@ -225,11 +301,12 @@ function TambahKegiatanPage() {
             setLoading(false);
         }
     };
-    
+
 
     const mitraOptions: Mitra[] = mitras.map((mitra) => ({
         sobat_id: mitra.sobat_id,
         nama: mitra.nama,
+        jenis_petugas: mitra.jenis_petugas, // Add jenis_petugas to the mapped object
     }));
 
     const customStyles: StylesConfig<Mitra, false> = {

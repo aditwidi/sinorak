@@ -1,3 +1,4 @@
+// /api/get-mitra-honor.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { mitra_honor_monthly } from '@/lib/db/schema';
@@ -44,27 +45,17 @@ export async function POST(req: NextRequest) {
                 .map((honor) => [honor.sobat_id!, honor.total_honor])
         );
 
+        // Prepare values for upsert
         const upserts = mitra_entries.map((entry: MitraEntry) => {
             const { sobat_id, target_volume_pekerjaan } = entry;
-            const total_honor = parseFloat(honor_satuan) * target_volume_pekerjaan;
+            const additional_honor = parseFloat(honor_satuan) * target_volume_pekerjaan;
 
-            if (existingMap.has(sobat_id)) {
-                // If the entry exists, update its total honor
-                return {
-                    sobat_id,
-                    month,
-                    year,
-                    total_honor: existingMap.get(sobat_id)! + total_honor, // Increment the existing total honor
-                };
-            } else {
-                // If the entry does not exist, insert a new record
-                return {
-                    sobat_id,
-                    month,
-                    year,
-                    total_honor,
-                };
-            }
+            return {
+                sobat_id,
+                month,
+                year,
+                total_honor: additional_honor, // Only store the additional honor amount
+            };
         });
 
         // Perform upsert operation: Insert new records or update existing ones
@@ -72,9 +63,9 @@ export async function POST(req: NextRequest) {
             .insert(mitra_honor_monthly)
             .values(upserts)
             .onConflictDoUpdate({
-                target: [mitra_honor_monthly.sobat_id, mitra_honor_monthly.month, mitra_honor_monthly.year], // Corrected to use column references
+                target: [mitra_honor_monthly.sobat_id, mitra_honor_monthly.month, mitra_honor_monthly.year],
                 set: {
-                    total_honor: sql`${mitra_honor_monthly.total_honor} + EXCLUDED.total_honor`, // Use SQL expression to add the new value to the existing one
+                    total_honor: sql`${mitra_honor_monthly.total_honor} + EXCLUDED.total_honor`, // Correctly add only the new value
                 },
             })
             .run();

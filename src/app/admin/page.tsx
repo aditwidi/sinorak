@@ -203,7 +203,7 @@ useEffect(() => {
               icon={<ClipboardDocumentIcon className="w-6 h-6 text-yellow-500" />}
             />
             <StatCard
-              title="Total Honor Kegiatan"
+              title="Total Honor Semua Mitra"
               subtitle="Bulan Ini"
               value={`Rp ${totalHonor.toLocaleString('id-ID')}`}
               icon={<CurrencyDollarIcon className="w-6 h-6 text-red-500" />}
