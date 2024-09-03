@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { eq } from "drizzle-orm"; // Import Drizzle ORM helpers
-import { mitra } from "@/lib/db/schema"; // Import your schema
+import { kegiatan_mitra } from "@/lib/db/schema"; // Import your schema
 
 export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -12,11 +12,11 @@ export async function DELETE(req: Request) {
     }
 
     try {
-        await db.delete(mitra).where(eq(mitra.sobat_id, sobat_id));
+        await db.delete(kegiatan_mitra).where(eq(kegiatan_mitra.sobat_id, sobat_id));
 
-        return NextResponse.json({ message: `Deleted mitra record with sobat_id: ${sobat_id}` });
+        return NextResponse.json({ message: `Deleted kegiatan_mitra records for sobat_id: ${sobat_id}` });
     } catch (error) {
-        console.error("Error deleting mitra:", error);
-        return NextResponse.json({ error: "Failed to delete mitra." }, { status: 500 });
+        console.error("Error deleting kegiatan_mitra:", error);
+        return NextResponse.json({ error: "Failed to delete kegiatan_mitra." }, { status: 500 });
     }
 }

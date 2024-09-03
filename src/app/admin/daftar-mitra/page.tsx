@@ -127,37 +127,46 @@ export default function DaftarMitraPage() {
     };
 
     const handleDelete = async (sobat_id: string) => {
-        const result = await Swal.fire({
-            title: "Konfirmasi",
-            text: "Apakah Anda yakin ingin menghapus data mitra ini?",
+        const confirmed = await Swal.fire({
+            title: "Apakah Anda yakin ingin menghapus data mitra ini?",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonText: "Ya, Hapus",
-            cancelButtonText: "Batal",
-            cancelButtonColor: "#DC3545"
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
         });
-
-        if (!result.isConfirmed) return;
-
+    
+        if (!confirmed.isConfirmed) return;
+    
         try {
-            const response = await fetch(`/api/delete-mitra?sobat_id=${sobat_id}`, {
+            // Step 1: Delete from kegiatan_mitra
+            let response = await fetch(`/api/delete-kegiatan-mitra?sobat_id=${sobat_id}`, {
                 method: "DELETE",
             });
-
-            if (response.ok) {
-                Swal.fire("Berhasil", "Data mitra berhasil dihapus", "success");
-                setMitraData((prevData) => prevData.filter((mitra) => mitra.sobat_id !== sobat_id));
-                setTotalCount((prevCount) => prevCount - 1);
-            } else {
-                const errorData = await response.json();
-                console.error("Failed to delete mitra:", errorData.error);
-                Swal.fire("Gagal", "Gagal menghapus data mitra.", "error");
-            }
+            if (!response.ok) throw new Error("Failed to delete kegiatan_mitra.");
+    
+            // Step 2: Delete from mitra_honor_monthly
+            response = await fetch(`/api/delete-honor-mitra-monthly?sobat_id=${sobat_id}`, {
+                method: "DELETE",
+            });
+            if (!response.ok) throw new Error("Failed to delete mitra_honor_monthly.");
+    
+            // Step 3: Delete from mitra
+            response = await fetch(`/api/delete-mitra?sobat_id=${sobat_id}`, {
+                method: "DELETE",
+            });
+            if (!response.ok) throw new Error("Failed to delete mitra.");
+    
+            Swal.fire("Deleted!", "Data mitra berhasil dihapus.", "success");
+    
+            // Remove the deleted mitra from the UI
+            setMitraData((prevData) => prevData.filter((mitra) => mitra.sobat_id !== sobat_id));
+            setTotalCount((prevCount) => prevCount - 1);
         } catch (error) {
             console.error("Error deleting mitra:", error);
-            Swal.fire("Kesalahan", "Terjadi kesalahan saat menghapus data mitra.", "error");
+            Swal.fire("Error!", "Gagal menghapus data mitra.", "error");
         }
-    };
+    };    
 
     return (
         <div className="w-full text-black">
