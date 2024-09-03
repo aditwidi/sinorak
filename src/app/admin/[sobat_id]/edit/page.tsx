@@ -1,3 +1,4 @@
+// app/admin/[sobat_id]/edit/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ export default function EditMitraPage() {
 
     // Define breadcrumb items
     const breadcrumbItems: BreadcrumbItem[] = [
-        { label: "Mitra Statistik" },
+        { label: "Mitra Statistik", href: "/admin/daftar-mitra" },
         { label: "Edit Data Mitra Statistik" },
     ];
 

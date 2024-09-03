@@ -121,6 +121,11 @@ export default function DaftarMitraPage() {
         router.push(`/admin/${sobat_id}/edit`);
     };
 
+    const handleView = (sobat_id: string) => {
+        router.push(`/admin/${sobat_id}/detail`);
+    };
+
+
     return (
         <div className="w-full text-black">
             <Breadcrumb items={breadcrumbItems} />
@@ -227,9 +232,11 @@ export default function DaftarMitraPage() {
                                                     <button
                                                         type="button"
                                                         className="text-blue-500 hover:text-blue-700"
+                                                        onClick={() => handleView(mitra.sobat_id)}
                                                     >
                                                         <EyeIcon className="w-5 h-5" aria-hidden="true" />
                                                     </button>
+
                                                     <button
                                                         type="button"
                                                         className="text-red-500 hover:text-red-700"
