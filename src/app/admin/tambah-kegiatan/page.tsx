@@ -157,10 +157,23 @@ function TambahKegiatanPage() {
     };
 
     const handleHonorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^\d]/g, ""); // Remove all non-numeric characters except for numbers
+        const value = e.target.value.replace(/[^\d]/g, ""); // Remove all non-numeric characters
+        const numericValue = parseFloat(value);
+    
+        if (!value || numericValue === 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Honor Satuan tidak boleh kosong atau nol.",
+            });
+            setHonorSatuan(""); // Clear the value if it's invalid
+            return;
+        }
+    
         const formattedValue = formatCurrency(value);
         setHonorSatuan(formattedValue); // Update state with formatted value
     };
+    
 
     const handleDateChange = (setter: React.Dispatch<React.SetStateAction<Date | null>>) => (date: Date | null) => {
         setter(date); // Set the date directly
