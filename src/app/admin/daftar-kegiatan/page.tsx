@@ -211,7 +211,7 @@ export default function DaftarKegiatanPage() {
                                                     </span>
                                                 </td>
 
-                                                <td className="px-6 py-4 space-x-2 flex">
+                                                <td className="px-6 py-4 flex items-center justify-center space-x-2">
                                                     <button
                                                         type="button"
                                                         className="text-green-500 hover:text-green-700"
