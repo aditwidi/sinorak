@@ -1,10 +1,10 @@
-// app/admin/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Breadcrumb from "@/components/Breadcrumb";
 import StatCard from "@/components/StatCard";
+import Link from "next/link"; // Import the Link component from Next.js
 import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentListIcon,
@@ -12,27 +12,31 @@ import {
   CurrencyDollarIcon,
   EyeIcon,
   FunnelIcon,
-  ChevronLeftIcon, // Import ChevronLeftIcon
-  ChevronRightIcon, // Import ChevronRightIcon
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
+// Define interfaces for data
 interface BreadcrumbItem {
   label: string;
   href?: string;
 }
 
 interface Activity {
-  name: string;
-  code: string;
-  responsible: string;
-  type: string;
+  kegiatan_id: number;
+  nama_kegiatan: string;
+  kode: string;
+  penanggung_jawab: string;
+  jenis_kegiatan: string;
 }
 
-
+// AdminPage component
 export default function AdminPage() {
   const { data: session, status } = useSession();
+  const [activities, setActivities] = useState<Activity[]>([]); // State for activities data
+  const [loading, setLoading] = useState<boolean>(true); // Loading state for fetching activities
   const [pendataanCount, setPendataanCount] = useState<number>(0);
   const [pemeriksaanCount, setPemeriksaanCount] = useState<number>(0);
   const [pengolahanCount, setPengolahanCount] = useState<number>(0);
@@ -40,22 +44,56 @@ export default function AdminPage() {
 
   const breadcrumbItems: BreadcrumbItem[] = [];
 
-  // Sample Data
-  const activities: Activity[] = [
-    { name: "Pemeriksaan Updating Listing (Susenas Maret 2024)", code: "2898.BMA.007.005.A.521213", responsible: "John Doe", type: "Pemeriksaan" },
-    { name: "Pendataan Survey Sosial Ekonomi (Desember 2024)", code: "2898.BMA.007.005.A.521214", responsible: "Jane Smith", type: "Pendataan" },
-    { name: "Analisis Data Konsumsi Rumah Tangga (2024)", code: "2898.BMA.007.005.A.521215", responsible: "Michael Johnson", type: "Pengolahan" },
-    // Add more data here as needed
-  ];
-
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(activities.length / itemsPerPage);
+  const itemsPerPage = 5;
 
   // State for filter
   const [filter, setFilter] = useState<string>("Semua");
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+
+  // Automatically calculate the current month and year
+  const currentDate = new Date();
+  const currentMonth = (currentDate.getMonth() + 1).toString(); // JavaScript months are 0-based
+  const currentYear = currentDate.getFullYear().toString();
+
+  // Fetch kegiatan data when the component mounts
+  useEffect(() => {
+    const fetchKegiatanData = async () => {
+      try {
+        setLoading(true);
+
+        const query = new URLSearchParams({
+          filterMonth: currentMonth,
+          filterYear: currentYear,
+        });
+
+        const response = await fetch(`/api/kegiatan-data?${query.toString()}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setActivities(data.kegiatanData || []);
+        } else {
+          console.error("Failed to fetch kegiatan data:", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching kegiatan data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKegiatanData();
+  }, [currentMonth, currentYear]); // Run effect when component mounts or current month/year changes
+
+  // Calculate paginated data
+  const filteredData = activities.filter((activity) =>
+    filter === "Semua" ? true : activity.jenis_kegiatan === filter
+  );
+
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIdx, startIdx + itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   // Functions to handle pagination
   const handlePrevPage = () => {
@@ -72,11 +110,6 @@ export default function AdminPage() {
     setCurrentPage(1); // Reset to page 1 whenever filter changes
     setIsFilterOpen(false); // Close the dropdown after selecting a filter
   };
-
-  // Filtered data based on the selected filter
-  const filteredData = activities.filter((activity) =>
-    filter === "Semua" ? true : activity.type === filter
-  );
 
   // Fetch mitra counts on component mount
   useEffect(() => {
@@ -101,10 +134,6 @@ export default function AdminPage() {
 
     fetchMitraCounts();
   }, []);
-
-  // Calculate paginated data
-  const startIdx = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData.slice(startIdx, startIdx + itemsPerPage);
 
   return (
     <div className="w-full text-black">
@@ -175,13 +204,15 @@ export default function AdminPage() {
             {/* Buttons Container */}
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-1 sm:mt-0">
               {/* Lihat Semua Kegiatan Button */}
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none w-full sm:w-auto"
-              >
-                <EyeIcon className="w-4 h-4 mr-2" />
-                Lihat Semua Kegiatan
-              </button>
+              <Link href="/admin/daftar-kegiatan">
+                <button
+                  type="button"
+                  className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none w-full sm:w-auto"
+                >
+                  <EyeIcon className="w-4 h-4 mr-2" />
+                  Lihat Semua Kegiatan
+                </button>
+              </Link>
 
               {/* Filter Button and Dropdown */}
               <div className="relative">
@@ -241,23 +272,37 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map((activity, index) => (
-                  <tr key={index} className="bg-white border-b hover:bg-gray-50">
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                      {activity.name}
-                    </th>
-                    <td className="px-6 py-4">{activity.code}</td>
-                    <td className="px-6 py-4">{activity.responsible}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.type === "Pendataan" ? "text-blue-800 bg-blue-100" :
-                        activity.type === "Pemeriksaan" ? "text-green-800 bg-green-100" :
-                          "text-yellow-800 bg-yellow-100"
-                        }`}>
-                        {activity.type}
-                      </span>
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4">
+                      <Skeleton height={20} width="100%" />
                     </td>
                   </tr>
-                ))}
+                ) : paginatedData.length === 0 ? ( // Check if there is no data to display
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-gray-500">
+                      Belum ada data kegiatan bulan ini.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((activity, index) => (
+                    <tr key={index} className="bg-white border-b hover:bg-gray-50">
+                      <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        {activity.nama_kegiatan}
+                      </th>
+                      <td className="px-6 py-4">{activity.kode}</td>
+                      <td className="px-6 py-4">{activity.penanggung_jawab}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.jenis_kegiatan === "Pendataan" ? "text-blue-800 bg-blue-100" :
+                          activity.jenis_kegiatan === "Pemeriksaan" ? "text-green-800 bg-green-100" :
+                            "text-yellow-800 bg-yellow-100"
+                          }`}>
+                          {activity.jenis_kegiatan}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
