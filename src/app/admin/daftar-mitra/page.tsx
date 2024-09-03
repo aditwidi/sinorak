@@ -32,6 +32,7 @@ export default function DaftarMitraPage() {
     const [mitraData, setMitraData] = useState<MitraData[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
+    const [deleteLoading, setDeleteLoading] = useState<boolean>(false); // State for delete loading
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
@@ -137,6 +138,8 @@ export default function DaftarMitraPage() {
         });
     
         if (!confirmed.isConfirmed) return;
+
+        setDeleteLoading(true); // Set delete loading to true
     
         try {
             // Step 1: Delete from kegiatan_mitra
@@ -165,6 +168,8 @@ export default function DaftarMitraPage() {
         } catch (error) {
             console.error("Error deleting mitra:", error);
             Swal.fire("Error!", "Gagal menghapus data mitra.", "error");
+        } finally {
+            setDeleteLoading(false); // Set delete loading to false
         }
     };    
 
@@ -285,10 +290,18 @@ export default function DaftarMitraPage() {
 
                                                     <button
                                                         type="button"
-                                                        className="text-red-500 hover:text-red-700"
+                                                        className={`text-red-500 hover:text-red-700 ${deleteLoading ? "cursor-not-allowed opacity-50" : ""}`}
                                                         onClick={() => handleDelete(mitra.sobat_id)}
+                                                        disabled={deleteLoading}
                                                     >
-                                                        <TrashIcon className="w-5 h-5" aria-hidden="true" />
+                                                        {deleteLoading ? (
+                                                            <svg className="animate-spin h-5 w-5 text-red-500" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8"></path>
+                                                            </svg>
+                                                        ) : (
+                                                            <TrashIcon className="w-5 h-5" aria-hidden="true" />
+                                                        )}
                                                     </button>
                                                 </td>
                                             </tr>
