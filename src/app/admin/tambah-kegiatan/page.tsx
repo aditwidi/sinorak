@@ -168,17 +168,18 @@ function TambahKegiatanPage() {
 
     const handleNamaKegiatanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^[a-zA-Z0-9./\s-]*$/.test(value)) {
-            // Allow letters, numbers, periods, spaces, hyphens, and forward slashes
+        if (/^[a-zA-Z0-9./\s\-()]*$/.test(value)) {
+            // Allow letters, numbers, periods, spaces, hyphens, forward slashes, and parentheses
             setNamaKegiatan(value);
         } else {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan",
-                text: "Nama Kegiatan hanya boleh mengandung huruf, angka, titik, strip, dan garis miring.",
+                text: "Nama Kegiatan hanya boleh mengandung huruf, angka, titik, strip, garis miring, dan tanda kurung.",
             });
         }
     };
+    
     
 
     const handleKodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
