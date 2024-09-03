@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Swal from "sweetalert2"; // Import SweetAlert2
+import Skeleton from "react-loading-skeleton"; // Import Skeleton component
+import "react-loading-skeleton/dist/skeleton.css"; // Import Skeleton styles
 import Breadcrumb from "@/components/Breadcrumb"; // Import Breadcrumb component
 import { LoadingIndicator } from "@/components/LoadingIndicator"; // Import LoadingIndicator component
 
@@ -13,7 +14,6 @@ interface BreadcrumbItem {
 }
 
 export default function EditMitraPage() {
-    const { data: session, status } = useSession(); // Get session data
     const router = useRouter();
     const params = useParams(); // Get dynamic route parameters
     const { sobat_id } = params; // Extract the sobat_id from the URL
@@ -38,6 +38,7 @@ export default function EditMitraPage() {
     useEffect(() => {
         if (sobatId) {
             const fetchData = async () => {
+                setLoading(true); // Start loading
                 try {
                     const response = await fetch(`/api/get-mitra?sobat_id=${sobatId}`); // Fetch existing mitra data
                     const data = await response.json();
@@ -56,6 +57,8 @@ export default function EditMitraPage() {
                     }
                 } catch (error) {
                     console.error("Error fetching mitra data:", error);
+                } finally {
+                    setLoading(false); // Stop loading
                 }
             };
 
@@ -165,30 +168,38 @@ export default function EditMitraPage() {
                             <label htmlFor="sobat_id" className="block text-sm font-medium text-gray-700">
                                 Sobat ID
                             </label>
-                            <input
-                                type="text"
-                                id="sobat_id"
-                                value={sobatId}
-                                onChange={handleSobatIdChange}
-                                required
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Masukkan Sobat ID"
-                                disabled // Sobat ID should be disabled to prevent changes
-                            />
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="sobat_id"
+                                    value={sobatId}
+                                    onChange={handleSobatIdChange}
+                                    required
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Masukkan Sobat ID"
+                                    disabled // Sobat ID should be disabled to prevent changes
+                                />
+                            )}
                         </div>
                         <div>
                             <label htmlFor="nik" className="block text-sm font-medium text-gray-700">
                                 NIK
                             </label>
-                            <input
-                                type="text"
-                                id="nik"
-                                value={nik}
-                                onChange={handleNikChange}
-                                required
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Masukkan NIK Mitra"
-                            />
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="nik"
+                                    value={nik}
+                                    onChange={handleNikChange}
+                                    required
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Masukkan NIK Mitra"
+                                />
+                            )}
                         </div>
 
                         {/* Jenis Petugas - Jenis Kelamin */}
@@ -196,30 +207,38 @@ export default function EditMitraPage() {
                             <label htmlFor="jenis-petugas" className="block text-sm font-medium text-gray-700">
                                 Jenis Petugas
                             </label>
-                            <select
-                                id="jenis-petugas"
-                                value={jenisPetugas}
-                                onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan")}
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="Pendataan">Pendataan</option>
-                                <option value="Pemeriksaan">Pemeriksaan</option>
-                                <option value="Pengolahan">Pengolahan</option>
-                            </select>
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <select
+                                    id="jenis-petugas"
+                                    value={jenisPetugas}
+                                    onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan")}
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="Pendataan">Pendataan</option>
+                                    <option value="Pemeriksaan">Pemeriksaan</option>
+                                    <option value="Pengolahan">Pengolahan</option>
+                                </select>
+                            )}
                         </div>
                         <div>
                             <label htmlFor="jenis-kelamin" className="block text-sm font-medium text-gray-700">
                                 Jenis Kelamin
                             </label>
-                            <select
-                                id="jenis-kelamin"
-                                value={jenisKelamin}
-                                onChange={(e) => setJenisKelamin(e.target.value as "Laki-laki" | "Perempuan")}
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
-                            </select>
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <select
+                                    id="jenis-kelamin"
+                                    value={jenisKelamin}
+                                    onChange={(e) => setJenisKelamin(e.target.value as "Laki-laki" | "Perempuan")}
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            )}
                         </div>
 
                         {/* Nama - Pekerjaan */}
@@ -227,29 +246,37 @@ export default function EditMitraPage() {
                             <label htmlFor="nama" className="block text-sm font-medium text-gray-700">
                                 Nama
                             </label>
-                            <input
-                                type="text"
-                                id="nama"
-                                value={nama}
-                                onChange={handleNamaChange}
-                                required
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Masukkan Nama Mitra"
-                            />
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="nama"
+                                    value={nama}
+                                    onChange={handleNamaChange}
+                                    required
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Masukkan Nama Mitra"
+                                />
+                            )}
                         </div>
                         <div>
                             <label htmlFor="pekerjaan" className="block text-sm font-medium text-gray-700">
                                 Pekerjaan
                             </label>
-                            <input
-                                type="text"
-                                id="pekerjaan"
-                                value={pekerjaan}
-                                onChange={handlePekerjaanChange}
-                                required
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Masukkan Pekerjaan Mitra"
-                            />
+                            {loading ? (
+                                <Skeleton height={40} />
+                            ) : (
+                                <input
+                                    type="text"
+                                    id="pekerjaan"
+                                    value={pekerjaan}
+                                    onChange={handlePekerjaanChange}
+                                    required
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Masukkan Pekerjaan Mitra"
+                                />
+                            )}
                         </div>
 
                         {/* Alamat Field - Single Column */}
@@ -257,14 +284,18 @@ export default function EditMitraPage() {
                             <label htmlFor="alamat" className="block text-sm font-medium text-gray-700">
                                 Alamat
                             </label>
-                            <textarea
-                                id="alamat"
-                                value={alamat}
-                                onChange={handleAlamatChange}
-                                required
-                                className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Masukkan Alamat Mitra"
-                            ></textarea>
+                            {loading ? (
+                                <Skeleton height={80} />
+                            ) : (
+                                <textarea
+                                    id="alamat"
+                                    value={alamat}
+                                    onChange={handleAlamatChange}
+                                    required
+                                    className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Masukkan Alamat Mitra"
+                                ></textarea>
+                            )}
                         </div>
 
                         {/* Submit Button */}

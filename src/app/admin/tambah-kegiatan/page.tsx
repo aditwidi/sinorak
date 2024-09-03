@@ -124,7 +124,17 @@ function TambahKegiatanPage() {
 
     const handleVolumeChange = (index: number, volume: string) => {
         const newMitraEntries = [...mitraEntries];
-        newMitraEntries[index].target_volume_pekerjaan = volume === "" ? "" : parseInt(volume, 10);
+        const numericVolume = parseInt(volume, 10);
+        if (isNaN(numericVolume) || numericVolume <= 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Target volume harus lebih dari nol.",
+            });
+            return;
+        }
+
+        newMitraEntries[index].target_volume_pekerjaan = volume === "" ? "" : numericVolume;
 
         // Check honor limit
         const jenisPetugas = newMitraEntries[index].jenis_petugas; // Use jenis_petugas from the mitra entry
@@ -132,7 +142,7 @@ function TambahKegiatanPage() {
 
         if (honorLimit) {
             const currentHonor = newMitraEntries[index].total_honor || 0;
-            const newHonor = currentHonor + parseFloat(honorSatuan.replace(/[^\d]/g, "")) * parseInt(volume || "0", 10);
+            const newHonor = currentHonor + parseFloat(honorSatuan.replace(/[^\d]/g, "")) * numericVolume;
 
             if (newHonor > honorLimit.honor_max) {
                 Swal.fire({
@@ -147,7 +157,7 @@ function TambahKegiatanPage() {
     };
 
     const handleHonorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^\d]/g, ""); // // Remove all non-numeric characters except for numbers
+        const value = e.target.value.replace(/[^\d]/g, ""); // Remove all non-numeric characters except for numbers
         const formattedValue = formatCurrency(value);
         setHonorSatuan(formattedValue); // Update state with formatted value
     };
@@ -156,6 +166,33 @@ function TambahKegiatanPage() {
         setter(date); // Set the date directly
     };
 
+    const handleNamaKegiatanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (/^[a-zA-Z0-9. ]*$/.test(value)) {
+            // Only allow letters, numbers, periods, and spaces
+            setNamaKegiatan(value);
+        } else {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Nama Kegiatan hanya boleh mengandung huruf, angka, dan titik.",
+            });
+        }
+    };
+
+    const handleKodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (/^[a-zA-Z0-9.]*$/.test(value) && value.length <= 30) {
+            // Only allow letters, numbers, and periods, and max 30 characters
+            setKode(value);
+        } else {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Kode Kegiatan hanya boleh mengandung huruf, angka, titik, dan maksimal 30 karakter.",
+            });
+        }
+    };
 
     // Function to format number to Indonesian Rupiah format
     const formatCurrency = (value: string) => {
@@ -362,7 +399,7 @@ function TambahKegiatanPage() {
                                 type="text"
                                 id="nama_kegiatan"
                                 value={namaKegiatan}
-                                onChange={(e) => setNamaKegiatan(e.target.value)}
+                                onChange={handleNamaKegiatanChange}
                                 required
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Masukkan nama kegiatan"
@@ -376,7 +413,7 @@ function TambahKegiatanPage() {
                                 type="text"
                                 id="kode"
                                 value={kode}
-                                onChange={(e) => setKode(e.target.value)}
+                                onChange={handleKodeChange}
                                 required
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Masukkan kode kegiatan"
