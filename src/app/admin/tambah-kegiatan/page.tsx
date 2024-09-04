@@ -69,7 +69,7 @@ function TambahKegiatanPage() {
         const fetchData = async () => {
             try {
                 // Fetch mitras
-                const mitrasResponse = await fetch("/api/mitra-data");
+                const mitrasResponse = await fetch("/api/get-all-mitra-data");
                 const mitrasData = await mitrasResponse.json();
                 if (mitrasResponse.ok) setMitras(mitrasData.mitraData);
 
