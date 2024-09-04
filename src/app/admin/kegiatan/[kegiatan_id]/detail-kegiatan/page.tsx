@@ -91,14 +91,30 @@ export default function DetailKegiatanPage() {
     };
 
     const handleNextPage = () => {
-        if (currentPage * itemsPerPage < pesertaList.length) setCurrentPage(currentPage + 1);
+        if (currentPage * itemsPerPage < filteredPesertaList.length) setCurrentPage(currentPage + 1);
     };
 
+    // Filter the peserta list based on the search term
+    const filteredPesertaList = pesertaList.filter(
+        (peserta) =>
+            peserta.sobat_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            peserta.nama.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     // Calculate the visible items for the current page
-    const paginatedPesertaList = pesertaList.slice(
+    const paginatedPesertaList = filteredPesertaList.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+
+    // Helper function to format date to dd-mm-yyyy
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
 
     return (
         <div className="w-full text-black px-4 sm:px-6 lg:px-8">
@@ -121,8 +137,8 @@ export default function DetailKegiatanPage() {
                                 <p className="text-sm sm:text-base"><strong>Kode Kegiatan:</strong> {kegiatanDetail.kode}</p>
                                 <p className="text-sm sm:text-base"><strong>Penanggung Jawab:</strong> {kegiatanDetail.penanggung_jawab}</p>
                                 <p className="text-sm sm:text-base"><strong>Jenis Kegiatan:</strong> {kegiatanDetail.jenis_kegiatan}</p>
-                                <p className="text-sm sm:text-base"><strong>Tanggal Mulai:</strong> {kegiatanDetail.tanggal_mulai}</p>
-                                <p className="text-sm sm:text-base"><strong>Tanggal Berakhir:</strong> {kegiatanDetail.tanggal_berakhir}</p>
+                                <p className="text-sm sm:text-base"><strong>Tanggal Mulai:</strong> {formatDate(kegiatanDetail.tanggal_mulai)}</p>
+                                <p className="text-sm sm:text-base"><strong>Tanggal Berakhir:</strong> {formatDate(kegiatanDetail.tanggal_berakhir)}</p>
                                 <p className="text-sm sm:text-base"><strong>Honor Satuan:</strong> Rp {(kegiatanDetail.honor_satuan ?? 0).toLocaleString()}</p>
                                 <p className="text-sm sm:text-base"><strong>Satuan Honor:</strong> {kegiatanDetail.satuan_honor}</p>
                             </div>
@@ -139,14 +155,17 @@ export default function DetailKegiatanPage() {
                             placeholder="Cari SOBAT ID atau Nama"
                             className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1); // Reset to the first page on search
+                            }}
                         />
                     </div>
 
                     {loadingPeserta ? (
                         <Skeleton height={200} />
                     ) : (
-                        <div className="relative shadow-md sm:rounded-lg">
+                        <div className="relative shadow-md sm:rounded-lg mb-4">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-sm text-left text-gray-500">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -160,7 +179,7 @@ export default function DetailKegiatanPage() {
                                     <tbody>
                                         {paginatedPesertaList.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="text-center py-4">Tidak ada peserta yang ditemukan</td>
+                                                <td colSpan={4} className="text-center py-4">Tidak ada data mitra yang ditemukan</td>
                                             </tr>
                                         ) : (
                                             paginatedPesertaList.map((peserta, index) => (
@@ -186,42 +205,43 @@ export default function DetailKegiatanPage() {
 
                             {/* Pagination Footer */}
                             <nav
-                                className="flex flex-wrap items-center justify-between p-4 border-t border-gray-200 bg-white rounded-b-lg"
+                                className="flex flex-wrap items-center justify-between p-2 border-t border-gray-200 bg-white rounded-b-lg"
                                 aria-label="Table navigation"
                             >
-                                <span className="text-sm font-normal text-gray-500">
+                                <span className="text-xs sm:text-sm font-normal text-gray-500">
                                     Menampilkan{" "}
                                     <span className="font-semibold">
                                         {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                                        {Math.min(currentPage * itemsPerPage, pesertaList.length)}
+                                        {Math.min(currentPage * itemsPerPage, filteredPesertaList.length)}
                                     </span>{" "}
-                                    dari <span className="font-semibold">{pesertaList.length}</span>
+                                    dari <span className="font-semibold">{filteredPesertaList.length}</span>
                                 </span>
-                                <ul className="inline-flex items-center -space-x-px ml-auto">
+                                <ul className="flex items-center space-x-1">
                                     <li>
                                         <button
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
-                                            className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage === 1
+                                            className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage === 1
                                                 ? "cursor-not-allowed opacity-50"
                                                 : "hover:bg-gray-100 hover:text-gray-700"
-                                                } rounded-l-md`}
+                                                } rounded-l`}
                                         >
-                                            <span className="sr-only">Previous</span>
-                                            <ChevronLeftIcon className="w-5 h-5" aria-hidden="true" />
+                                            <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                                         </button>
+                                    </li>
+                                    <li>
+                                        <span className="px-1 py-1 text-xs sm:px-2 sm:py-1.5 text-gray-700">{currentPage}</span>
                                     </li>
                                     <li>
                                         <button
                                             onClick={handleNextPage}
-                                            disabled={currentPage * itemsPerPage >= pesertaList.length}
-                                            className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= pesertaList.length
+                                            disabled={currentPage * itemsPerPage >= filteredPesertaList.length}
+                                            className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= filteredPesertaList.length
                                                 ? "cursor-not-allowed opacity-50"
                                                 : "hover:bg-gray-100 hover:text-gray-700"
-                                                } rounded-r-md`}
+                                                } rounded-r`}
                                         >
-                                            <span className="sr-only">Next</span>
-                                            <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
+                                            <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                                         </button>
                                     </li>
                                 </ul>
