@@ -6,6 +6,12 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { PencilSquareIcon, EyeIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { ClipLoader } from "react-spinners"; // Import a spinner component
+
+// Initialize SweetAlert2
+const MySwal = withReactContent(Swal);
 
 // Define interfaces for data
 interface BreadcrumbItem {
@@ -29,6 +35,8 @@ export default function DaftarKegiatanPage() {
     const [kegiatanData, setKegiatanData] = useState<KegiatanData[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
+    const [deleting, setDeleting] = useState<boolean>(false); // State for delete loading indicator
+    const [deletingId, setDeletingId] = useState<number | null>(null); // Track which item is being deleted
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
@@ -104,6 +112,82 @@ export default function DaftarKegiatanPage() {
 
         fetchKegiatanData();
     }, [searchTerm, filterMonth, filterYear, filterJenisKegiatan, currentPage, itemsPerPage]);
+
+    const handleDeleteKegiatan = async (kegiatan_id: number) => {
+        // Show confirmation dialog
+        const result = await MySwal.fire({
+            title: 'Konfirmasi',
+            text: 'Apakah Anda yakin ingin menghapus data kegiatan ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus!',
+            confirmButtonColor:"#3f83f8",
+            cancelButtonText: 'Batal',
+            cancelButtonColor: "#d33",
+        });
+
+        if (!result.isConfirmed) return; // If the user cancels, do nothing
+
+        setDeleting(true); // Set deleting state to true
+        setDeletingId(kegiatan_id); // Track the ID being deleted
+        try {
+            // First, update honor in mitra_honor_monthly
+            const updateHonorResponse = await fetch('/api/update-honor-mitra-monthly', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kegiatan_id }),
+            });
+
+            if (!updateHonorResponse.ok) {
+                throw new Error('Failed to update honor_mitra_monthly');
+            }
+
+            // Second, delete entries in kegiatan_mitra
+            const deleteKegiatanMitraResponse = await fetch('/api/delete-mitra-kegiatan', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kegiatan_id }),
+            });
+
+            if (!deleteKegiatanMitraResponse.ok) {
+                throw new Error('Failed to delete kegiatan_mitra entries');
+            }
+
+            // Third, delete the kegiatan
+            const deleteKegiatanResponse = await fetch('/api/delete-kegiatan', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kegiatan_id }),
+            });
+
+            if (!deleteKegiatanResponse.ok) {
+                throw new Error('Failed to delete kegiatan');
+            }
+
+            // Show success message
+            MySwal.fire({
+                title: 'Berhasil',
+                text: 'Kegiatan berhasil dihapus.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            }).then(() => {
+                router.push("/admin/daftar-kegiatan"); // Redirect back to the main page after success
+            });
+
+        } catch (error) {
+            console.error('Error deleting kegiatan:', error);
+            // Show error message
+            MySwal.fire({
+                title: 'Gagal',
+                text: 'Gagal menghapus kegiatan.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        } finally {
+            setDeleting(false); // Reset deleting state
+            setDeletingId(null); // Clear the deleting ID state
+        }
+    };
 
     const handlePrevPage = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -227,9 +311,15 @@ export default function DaftarKegiatanPage() {
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        className="text-red-500 hover:text-red-700"
+                                                        className={`text-red-500 hover:text-red-700 ${deleting && deletingId === kegiatan.kegiatan_id ? "cursor-not-allowed opacity-50" : ""}`}
+                                                        onClick={() => handleDeleteKegiatan(kegiatan.kegiatan_id)}
+                                                        disabled={deleting && deletingId === kegiatan.kegiatan_id}
                                                     >
-                                                        <TrashIcon className="w-5 h-5" aria-hidden="true" />
+                                                        {deleting && deletingId === kegiatan.kegiatan_id ? (
+                                                            <ClipLoader size={16} color="#f87171" /> // Use a spinner while deleting
+                                                        ) : (
+                                                            <TrashIcon className="w-5 h-5" aria-hidden="true" />
+                                                        )}
                                                     </button>
                                                 </td>
                                             </tr>

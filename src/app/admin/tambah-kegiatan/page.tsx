@@ -339,6 +339,8 @@ function TambahKegiatanPage() {
                     icon: "success",
                     title: "Berhasil",
                     text: "Kegiatan dan honor mitra berhasil ditambahkan.",
+                }).then(() => {
+                    router.push("/admin/daftar-kegiatan");
                 });
             }
 

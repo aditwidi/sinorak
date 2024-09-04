@@ -129,13 +129,14 @@ export default function DaftarMitraPage() {
 
     const handleDelete = async (sobat_id: string) => {
         const confirmed = await Swal.fire({
-            title: "Apakah Anda yakin ingin menghapus data mitra ini?",
+            title:"Konfirmasi",
+            text: "Apakah Anda yakin ingin menghapus data mitra ini?",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             cancelButtonText:"Batal",
             confirmButtonText: "Ya, Saya Yakin!",
+            confirmButtonColor:"#3F83F8"
         });
     
         if (!confirmed.isConfirmed) return;
