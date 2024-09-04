@@ -97,44 +97,37 @@ function EditKegiatanPage() {
                 console.error("No kegiatan_id found");
                 return;
             }
-
+    
             try {
                 setLoading(true);
-
+    
                 // Fetch existing kegiatan data
                 const response = await fetch(`/api/get-data-kegiatan/${kegiatan_id}`);
                 const result = await response.json();
-
+    
                 if (response.ok) {
                     const data = result.kegiatan;
                     setNamaKegiatan(data.nama_kegiatan || "");
                     setKode(data.kode || "");
                     setJenisKegiatan(data.jenis_kegiatan || "Pendataan");
-                    setTanggalMulai(
-                        data.tanggal_mulai ? new Date(data.tanggal_mulai) : null
-                    );
-                    setTanggalBerakhir(
-                        data.tanggal_berakhir ? new Date(data.tanggal_berakhir) : null
-                    );
+                    setTanggalMulai(data.tanggal_mulai ? new Date(data.tanggal_mulai) : null);
+                    setTanggalBerakhir(data.tanggal_berakhir ? new Date(data.tanggal_berakhir) : null);
                     setPenanggungJawab(data.penanggung_jawab || "");
                     setSatuanHonor(data.satuan_honor || "Dokumen");
-
+    
                     // Set month and year if available
                     setMonth(data.month || null);
                     setYear(data.year || null);
                 } else {
                     Swal.fire("Error", result.error || "Failed to fetch kegiatan data", "error");
                 }
-
+    
                 // Fetch honor_satuan and mitra entries
-                const kegiatanMitraResponse = await fetch(
-                    `/api/get-kegiatan-mitra/${kegiatan_id}`
-                );
+                const kegiatanMitraResponse = await fetch(`/api/get-kegiatan-mitra/${kegiatan_id}`);
                 const kegiatanMitraData = await kegiatanMitraResponse.json();
-
+    
                 if (kegiatanMitraResponse.ok) {
-                    const honorSatuan =
-                        kegiatanMitraData.kegiatanMitraData[0]?.honor_satuan || "";
+                    const honorSatuan = kegiatanMitraData.kegiatanMitraData[0]?.honor_satuan || "";
                     const mitraEntriesData = kegiatanMitraData.kegiatanMitraData.map(
                         (entry: KegiatanMitraEntry) => ({
                             sobat_id: entry.sobat_id,
@@ -143,31 +136,27 @@ function EditKegiatanPage() {
                             jenis_petugas: entry.jenis_petugas,
                         })
                     );
-
+    
                     setHonorSatuan(formatCurrency(honorSatuan.toString()));
                     setMitraEntries(mitraEntriesData);
                 } else {
-                    Swal.fire(
-                        "Error",
-                        kegiatanMitraData.error || "Failed to fetch kegiatan mitra data",
-                        "error"
-                    );
+                    Swal.fire("Error", kegiatanMitraData.error || "Failed to fetch kegiatan mitra data", "error");
                 }
-
+    
                 // Fetch mitras
                 const mitrasResponse = await fetch("/api/mitra-data");
                 const mitrasData = await mitrasResponse.json();
                 if (mitrasResponse.ok) {
                     setMitras(mitrasData.mitraData);
                 }
-
+    
                 // Fetch honor limits
                 const honorLimitResponse = await fetch("/api/honor-limits");
                 const honorLimitData = await honorLimitResponse.json();
                 if (honorLimitResponse.ok) {
                     setHonorLimits(honorLimitData.honorLimits);
                 }
-
+    
                 if (session?.user) {
                     setPenanggungJawab(session.user.name || "");
                 }
@@ -177,9 +166,10 @@ function EditKegiatanPage() {
                 setLoading(false);
             }
         };
-
+    
         fetchInitialData();
-    }, [session, kegiatan_id]);
+    }, []); // <-- Empty dependency array to ensure it runs only once
+    
 
     // Honor limit checking function using useCallback
     const checkHonorLimits = useCallback(() => {
