@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { ClipLoader } from "react-spinners";
 import Breadcrumb from "@/components/Breadcrumb"; // Adjust the import path to your Breadcrumb component
 
 interface KegiatanDetail {
@@ -92,8 +91,14 @@ export default function DetailKegiatanPage() {
     };
 
     const handleNextPage = () => {
-        setCurrentPage(currentPage + 1);
+        if (currentPage * itemsPerPage < pesertaList.length) setCurrentPage(currentPage + 1);
     };
+
+    // Calculate the visible items for the current page
+    const paginatedPesertaList = pesertaList.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="w-full text-black px-4 sm:px-6 lg:px-8">
@@ -153,12 +158,12 @@ export default function DetailKegiatanPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {pesertaList.length === 0 ? (
+                                        {paginatedPesertaList.length === 0 ? (
                                             <tr>
                                                 <td colSpan={4} className="text-center py-4">Tidak ada peserta yang ditemukan</td>
                                             </tr>
                                         ) : (
-                                            pesertaList.map((peserta, index) => (
+                                            paginatedPesertaList.map((peserta, index) => (
                                                 <tr key={index} className="bg-white border-b hover:bg-gray-50">
                                                     <td className="px-2 py-4 font-medium text-gray-900">{peserta.sobat_id}</td>
                                                     <td className="px-2 py-4">{peserta.nama}</td>
@@ -209,6 +214,7 @@ export default function DetailKegiatanPage() {
                                     <li>
                                         <button
                                             onClick={handleNextPage}
+                                            disabled={currentPage * itemsPerPage >= pesertaList.length}
                                             className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= pesertaList.length
                                                 ? "cursor-not-allowed opacity-50"
                                                 : "hover:bg-gray-100 hover:text-gray-700"
