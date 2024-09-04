@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 import { mitra_honor_monthly, kegiatan_mitra, kegiatan } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
     try {
@@ -17,14 +17,13 @@ export async function POST(req: NextRequest) {
             .select({
                 kegiatan_id: kegiatan_mitra.kegiatan_id,
                 sobat_id: kegiatan_mitra.sobat_id,
-                kegiatan_mitra_id: kegiatan_mitra.kegiatan_mitra_id,
                 honor_satuan: kegiatan_mitra.honor_satuan,
                 target_volume_pekerjaan: kegiatan_mitra.target_volume_pekerjaan,
                 total_honor: kegiatan_mitra.total_honor,
-                tanggal_berakhir: kegiatan.tanggal_berakhir, // Join to get tanggal_berakhir from kegiatan
+                tanggal_berakhir: kegiatan.tanggal_berakhir,
             })
             .from(kegiatan_mitra)
-            .innerJoin(kegiatan, eq(kegiatan_mitra.kegiatan_id, kegiatan.kegiatan_id)) // Join on kegiatan_id
+            .innerJoin(kegiatan, eq(kegiatan_mitra.kegiatan_id, kegiatan.kegiatan_id))
             .where(eq(kegiatan_mitra.kegiatan_id, kegiatan_id))
             .all();
 
@@ -32,30 +31,63 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "No entries found for this kegiatan_id" }, { status: 404 });
         }
 
-        // Deduct honor from mitra_honor_monthly
-        for (const entry of kegiatanMitraEntries) {
-            const { sobat_id, total_honor, tanggal_berakhir } = entry;
+        // Extract unique sobat_ids and the corresponding total_honor to be deducted
+        const sobatIds = kegiatanMitraEntries
+            .map(entry => entry.sobat_id)
+            .filter((id): id is string => id !== null); // Ensure sobat_ids are not null
 
-            // Ensure sobat_id and tanggal_berakhir are not null before proceeding
-            if (!sobat_id || !tanggal_berakhir) continue;
+        const honorDeductions = kegiatanMitraEntries.reduce((acc, entry) => {
+            if (!entry.sobat_id || !entry.tanggal_berakhir) return acc;
 
-            // Extract month and year from tanggal_berakhir
-            const { month, year } = extractMonthAndYear(tanggal_berakhir);
+            const { month, year } = extractMonthAndYear(entry.tanggal_berakhir);
+            const key = `${entry.sobat_id}-${month}-${year}`;
+            const deduction = acc.get(key) || 0;
+            acc.set(key, deduction + entry.total_honor);
+            return acc;
+        }, new Map<string, number>());
 
-            await db
-                .update(mitra_honor_monthly)
-                .set({
-                    total_honor: sql`${mitra_honor_monthly.total_honor} - ${total_honor}`,
-                })
-                .where(
-                    and(
-                        eq(mitra_honor_monthly.sobat_id, sobat_id),
-                        eq(mitra_honor_monthly.month, month),
-                        eq(mitra_honor_monthly.year, year)
+        // Fetch existing records for the specified sobat_ids, months, and years
+        const existingHonors = await db
+            .select()
+            .from(mitra_honor_monthly)
+            .where(
+                and(
+                    inArray(mitra_honor_monthly.sobat_id, sobatIds),
+                    inArray(
+                        mitra_honor_monthly.month,
+                        Array.from(honorDeductions.keys()).map(key => parseInt(key.split('-')[1]))
+                    ),
+                    inArray(
+                        mitra_honor_monthly.year,
+                        Array.from(honorDeductions.keys()).map(key => parseInt(key.split('-')[2]))
                     )
                 )
-                .run();
-        }
+            )
+            .all();
+
+        const updates = existingHonors.map(honor => {
+            const key = `${honor.sobat_id}-${honor.month}-${honor.year}`;
+            const deduction = honorDeductions.get(key);
+            if (!deduction) return null;
+            return {
+                sobat_id: honor.sobat_id,
+                month: honor.month,
+                year: honor.year,
+                total_honor: deduction, // Only the amount to be deducted
+            };
+        }).filter((update): update is NonNullable<typeof update> => update !== null); // Properly type-guard against null
+
+        // Perform upsert operation: Insert new records or update existing ones
+        await db
+            .insert(mitra_honor_monthly)
+            .values(updates)
+            .onConflictDoUpdate({
+                target: [mitra_honor_monthly.sobat_id, mitra_honor_monthly.month, mitra_honor_monthly.year],
+                set: {
+                    total_honor: sql`${mitra_honor_monthly.total_honor} - EXCLUDED.total_honor`,
+                },
+            })
+            .run();
 
         return NextResponse.json({ message: "Honor mitra monthly updated successfully" }, { status: 200 });
     } catch (error) {
@@ -71,7 +103,7 @@ function extractMonthAndYear(dateString: string | null): { month: number; year: 
     }
     const date = new Date(dateString);
     return {
-        month: date.getMonth() + 1, // Months are zero-based, add 1 for the correct month number
+        month: date.getMonth() + 1,
         year: date.getFullYear(),
     };
 }

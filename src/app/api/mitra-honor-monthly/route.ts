@@ -1,4 +1,4 @@
-// /api/get-mitra-honor.ts
+// /api/mitra-honor-monthly
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { mitra_honor_monthly } from '@/lib/db/schema';

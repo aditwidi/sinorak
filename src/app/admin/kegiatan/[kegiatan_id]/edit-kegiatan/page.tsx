@@ -293,21 +293,21 @@ function EditKegiatanPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
+    
         // Periksa apakah ada mitra yang melebihi batas honor maksimum
         const exceedsLimit = mitraEntries.some(entry => {
             const honorLimit = honorLimits.find(limit => limit.jenis_petugas === entry.jenis_petugas);
             if (honorLimit) {
                 const currentHonor = entry.total_honor || 0;
                 const newHonor = parseFloat(honorSatuan.replace(/[^\d]/g, "")) * (parseInt(entry.target_volume_pekerjaan as string, 10) || 0);
-
+    
                 if (newHonor > honorLimit.honor_max) {
                     return true;
                 }
             }
             return false;
         });
-
+    
         if (exceedsLimit) {
             Swal.fire({
                 icon: "warning",
@@ -317,7 +317,7 @@ function EditKegiatanPage() {
             setLoading(false); // Stop loading
             return; // Stop submit process
         }
-
+    
         try {
             // Step 1: Deduct the current honor from mitra_honor_monthly
             const deductHonorResponse = await fetch(
@@ -328,14 +328,14 @@ function EditKegiatanPage() {
                     body: JSON.stringify({ kegiatan_id })
                 }
             );
-
+    
             if (!deductHonorResponse.ok) {
                 const errorData = await deductHonorResponse.json();
                 Swal.fire("Error", errorData.error || "Failed to deduct honor", "error");
                 setLoading(false);
                 return;
             }
-
+    
             // Step 2: Update the kegiatan table
             const updateKegiatanResponse = await fetch("/api/update-kegiatan", {
                 method: "POST",
@@ -355,7 +355,7 @@ function EditKegiatanPage() {
                     satuan_honor: satuanHonor
                 })
             });
-
+    
             if (!updateKegiatanResponse.ok) {
                 const errorData = await updateKegiatanResponse.json();
                 Swal.fire(
@@ -366,7 +366,7 @@ function EditKegiatanPage() {
                 setLoading(false);
                 return;
             }
-
+    
             // Step 3: Update the kegiatan_mitra table
             const updateKegiatanMitraResponse = await fetch("/api/update-kegiatan-mitra", {
                 method: "PUT",
@@ -380,25 +380,35 @@ function EditKegiatanPage() {
                     honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, ""))
                 })
             });
-
+    
             if (!updateKegiatanMitraResponse.ok) {
                 const errorData = await updateKegiatanMitraResponse.json();
                 Swal.fire("Error", errorData.error || "Failed to update kegiatan_mitra", "error");
                 setLoading(false);
                 return;
             }
-
-            if (!updateKegiatanMitraResponse.ok) {
-                const errorData = await updateKegiatanMitraResponse.json();
-                Swal.fire(
-                    "Error",
-                    errorData.error || "Failed to update kegiatan_mitra",
-                    "error"
-                );
-                setLoading(false);
-                return;
+    
+            // **Tambahan Baru: Step 3.1: Update total_honor pada kegiatan_mitra**
+            for (const entry of mitraEntries) {
+                const updateTotalHonorResponse = await fetch("/api/update-honor", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        kegiatan_id,
+                        sobat_id: entry.sobat_id,
+                        honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Send honor_satuan as a number
+                        target_volume_pekerjaan: entry.target_volume_pekerjaan, // Send target_volume_pekerjaan
+                    })
+                });
+    
+                if (!updateTotalHonorResponse.ok) {
+                    const errorData = await updateTotalHonorResponse.json();
+                    Swal.fire("Error", errorData.error || "Failed to update total_honor for sobat_id " + entry.sobat_id, "error");
+                    setLoading(false);
+                    return;
+                }
             }
-
+    
             // Step 4: Update the honor in mitra_honor_monthly
             const updateHonorResponse = await fetch("/api/mitra-honor-monthly", {
                 method: "POST",
@@ -414,14 +424,14 @@ function EditKegiatanPage() {
                         : ""
                 })
             });
-
+    
             if (!updateHonorResponse.ok) {
                 const errorData = await updateHonorResponse.json();
                 Swal.fire("Error", errorData.error || "Failed to update honor", "error");
                 setLoading(false);
                 return;
             }
-
+    
             Swal.fire("Success", "Kegiatan and honor updated successfully.", "success");
             router.push("/admin/daftar-kegiatan"); // Redirect to a relevant page after success
         } catch (error) {
@@ -434,7 +444,7 @@ function EditKegiatanPage() {
         } finally {
             setLoading(false);
         }
-    };
+    };    
 
     const handleMitraChange = async (index: number, sobat_id: string) => {
         const newMitraEntries = [...mitraEntries];
