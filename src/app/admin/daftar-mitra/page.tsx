@@ -134,7 +134,8 @@ export default function DaftarMitraPage() {
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
+            cancelButtonText:"Batal",
+            confirmButtonText: "Ya, Saya Yakin!",
         });
     
         if (!confirmed.isConfirmed) return;
@@ -160,7 +161,7 @@ export default function DaftarMitraPage() {
             });
             if (!response.ok) throw new Error("Failed to delete mitra.");
     
-            Swal.fire("Deleted!", "Data mitra berhasil dihapus.", "success");
+            Swal.fire("Berhasil!", "Data mitra berhasil dihapus.", "success");
     
             // Remove the deleted mitra from the UI
             setMitraData((prevData) => prevData.filter((mitra) => mitra.sobat_id !== sobat_id));
