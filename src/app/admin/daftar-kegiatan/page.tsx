@@ -306,6 +306,7 @@ export default function DaftarKegiatanPage() {
                                                     <button
                                                         type="button"
                                                         className="text-blue-500 hover:text-blue-700"
+                                                        onClick={() => router.push(`/admin/kegiatan/${kegiatan.kegiatan_id}/detail-kegiatan`)}
                                                     >
                                                         <EyeIcon className="w-5 h-5" aria-hidden="true" />
                                                     </button>
