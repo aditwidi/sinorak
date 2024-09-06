@@ -144,6 +144,7 @@ function EditKegiatanPage() {
         };
     
         fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);    
 
     const checkHonorLimits = useCallback(() => {
