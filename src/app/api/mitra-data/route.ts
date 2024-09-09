@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db/db"; // Import your database instance
-import { mitra, mitra_honor_monthly } from "@/lib/db/schema"; // Import your schema
+import { db } from "@/lib/db/db";
+import { mitra, mitra_honor_monthly } from "@/lib/db/schema";
 import { eq, sql, and, like } from "drizzle-orm";
 
 export const revalidate = 0; // Revalidate every new data
@@ -15,8 +15,8 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
-    const sortColumn = searchParams.get("sortColumn") || "nama"; // Default sort column
-    const sortDirection = searchParams.get("sortDirection") === "desc" ? "desc" : "asc"; // Default sort direction to ascending
+    const sortColumn = searchParams.get("sortColumn") || "nama";
+    const sortDirection = searchParams.get("sortDirection") === "desc" ? "desc" : "asc";
 
     const offset = (page - 1) * pageSize;
 
@@ -24,31 +24,27 @@ export async function GET(request: Request) {
     if (searchTerm) filters.push(like(mitra.nama, `%${searchTerm}%`));
     if (filterJenisPetugas) filters.push(eq(mitra.jenis_petugas, filterJenisPetugas));
 
-    // Apply filters for month and year if specified
     const monthYearFilter = filterMonth && filterYear
         ? and(
             eq(mitra_honor_monthly.month, parseInt(filterMonth)),
             eq(mitra_honor_monthly.year, parseInt(filterYear))
-          )
-        : sql`1 = 1`; // No filtering if month and year are not specified
+        )
+        : sql`1 = 1`;
 
     try {
-        // Ensure the sortColumn is a valid column name
         const validColumns = ["nama", "honor_bulanan", "sobat_id"];
         const sortBy = validColumns.includes(sortColumn) ? sortColumn : "nama";
 
-        // Construct the sorting dynamically in a safer way
         const orderByClause = sortDirection === "desc"
             ? sql`${sql.identifier(sortBy)} DESC`
             : sql`${sql.identifier(sortBy)} ASC`;
 
-        // Fetch mitra data with honor and handle cases where there is no matching data for month and year
         let mitraData = await db
             .select({
                 sobat_id: mitra.sobat_id,
                 nama: mitra.nama,
                 jenis_petugas: mitra.jenis_petugas,
-                honor_bulanan: sql<number | null>`COALESCE(MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.total_honor} ELSE 0 END), 0)`.as("honor_bulanan"),
+                honor_bulanan: sql<number | null>`COALESCE(SUM(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.total_honor} ELSE 0 END), 0)`.as("honor_bulanan"),
                 month: sql<number | null>`MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.month} ELSE NULL END)`.as("month"),
                 year: sql<number | null>`MAX(CASE WHEN ${monthYearFilter} THEN ${mitra_honor_monthly.year} ELSE NULL END)`.as("year")
             })
@@ -56,14 +52,13 @@ export async function GET(request: Request) {
             .leftJoin(mitra_honor_monthly, eq(mitra.sobat_id, mitra_honor_monthly.sobat_id))
             .where(and(...filters))
             .groupBy(mitra.sobat_id)
-            .orderBy(orderByClause) // Apply the safer sorting
+            .orderBy(orderByClause)
             .limit(pageSize)
             .offset(offset)
             .all();
 
-        // Count total distinct mitra
         const totalCountResult = await db
-            .select({ count: sql<number>`COUNT(DISTINCT ${mitra.sobat_id})` }) 
+            .select({ count: sql<number>`COUNT(DISTINCT ${mitra.sobat_id})` })
             .from(mitra)
             .leftJoin(mitra_honor_monthly, eq(mitra.sobat_id, mitra_honor_monthly.sobat_id))
             .where(and(...filters))

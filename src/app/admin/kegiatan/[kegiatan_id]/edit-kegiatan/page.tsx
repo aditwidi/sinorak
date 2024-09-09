@@ -121,7 +121,7 @@ function EditKegiatanPage() {
                     Swal.fire("Error", kegiatanMitraData.error || "Failed to fetch kegiatan mitra data", "error");
                 }
     
-                const mitrasResponse = await fetch("/api/mitra-data");
+                const mitrasResponse = await fetch("/api/get-all-mitra-data");
                 const mitrasData = await mitrasResponse.json();
                 if (mitrasResponse.ok) {
                     setMitras(mitrasData.mitraData);
