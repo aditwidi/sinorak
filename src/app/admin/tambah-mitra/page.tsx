@@ -53,7 +53,7 @@ export default function TambahMitraPage() {
         if (/^[a-zA-Z\s.,-]*$/.test(value)) { // Allow letters, spaces, periods, commas, and hyphens
             setNama(value);
         }
-    };    
+    };
 
     const handlePekerjaanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, ""); // Remove special characters
@@ -68,7 +68,7 @@ export default function TambahMitraPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-    
+
         try {
             const response = await fetch("/api/tambah-mitra", {
                 method: "POST", // Ensure the method is POST
@@ -83,9 +83,9 @@ export default function TambahMitraPage() {
                     jenis_kelamin: jenisKelamin,
                 }),
             });
-    
+
             const data = await response.json();
-    
+
             if (!response.ok) {
                 // Show error alert with SweetAlert2
                 Swal.fire({
@@ -102,7 +102,7 @@ export default function TambahMitraPage() {
                 }).then(() => {
                     router.push("/admin/daftar-mitra"); // Redirect back to the main page after success
                 });
-                
+
                 // Clear the form fields after successful submission
                 setSobatId("");
                 setNik("");
@@ -123,6 +123,11 @@ export default function TambahMitraPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Function to handle redirect to the Upload Mitra page
+    const handleRedirectToUpload = () => {
+        router.push("/admin/upload-mitra");
     };
 
     return (
@@ -256,6 +261,23 @@ export default function TambahMitraPage() {
                         </div>
                     </form>
                 </section>
+            </div>
+
+            {/* Divider */}
+            <hr className="my-8 border-gray-300" />
+
+            {/* Page Title */}
+            <h1 className="text-xl font-bold mt-4">Upload Data Mitra</h1>
+            <p className="text-sm text-gray-600">Fitur upload data mitra digunakan untuk menambahkan data mitra secara batch.</p>
+
+            {/* Option to upload data */}
+            <div className="mt-6 pb-6">
+                <button
+                    onClick={handleRedirectToUpload}
+                    className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                    Upload Data Mitra
+                </button>
             </div>
         </div>
     );
