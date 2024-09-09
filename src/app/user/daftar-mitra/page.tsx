@@ -38,6 +38,8 @@ export default function DaftarMitraPage() {
     const [filterJenisPetugas, setFilterJenisPetugas] = useState<string>("");
     const [availableMonths, setAvailableMonths] = useState<number[]>([parseInt(currentMonth)]);
     const [availableYears, setAvailableYears] = useState<number[]>([parseInt(currentYear)]);
+    const [sortColumn, setSortColumn] = useState<string>("nama"); // State for the current sort column
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // State for the current sort direction
     const itemsPerPage = 10;
 
     const router = useRouter();
@@ -86,6 +88,8 @@ export default function DaftarMitraPage() {
                     filterJenisPetugas,
                     page: currentPage.toString(),
                     pageSize: itemsPerPage.toString(),
+                    sortColumn,
+                    sortDirection,
                 });
 
                 const response = await fetch(`/api/mitra-data?${query.toString()}`);
@@ -105,7 +109,16 @@ export default function DaftarMitraPage() {
         };
 
         fetchMitraData();
-    }, [searchTerm, filterMonth, filterYear, filterJenisPetugas, currentPage, itemsPerPage]);
+    }, [searchTerm, filterMonth, filterYear, filterJenisPetugas, currentPage, itemsPerPage, sortColumn, sortDirection]);
+
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            setSortDirection((prevDirection) => (prevDirection === "asc" ? "desc" : "asc"));
+        } else {
+            setSortColumn(column);
+            setSortDirection("asc");
+        }
+    };
 
     const handlePrevPage = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -126,7 +139,6 @@ export default function DaftarMitraPage() {
         const items = [];
         const maxPagesToShow = 5;
 
-        // Show the first page and ellipses if necessary
         if (currentPage > maxPagesToShow) {
             items.push(
                 <button
@@ -142,7 +154,6 @@ export default function DaftarMitraPage() {
             items.push(<span key="start-dots" className="px-2">...</span>);
         }
 
-        // Calculate start and end page numbers
         const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
         const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
 
@@ -162,7 +173,6 @@ export default function DaftarMitraPage() {
             );
         }
 
-        // Show the last page and ellipses if necessary
         if (currentPage < totalPages - maxPagesToShow + 1) {
             items.push(<span key="end-dots" className="px-2">...</span>);
             items.push(
@@ -250,10 +260,28 @@ export default function DaftarMitraPage() {
                             <table className="min-w-full text-sm text-left text-gray-500">
                                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                     <tr>
-                                        <th scope="col" className="px-6 py-3">SOBAT ID</th>
-                                        <th scope="col" className="px-6 py-3">Nama</th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 cursor-pointer"
+                                            onClick={() => handleSort("sobat_id")}
+                                        >
+                                            SOBAT ID
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 cursor-pointer"
+                                            onClick={() => handleSort("nama")}
+                                        >
+                                            Nama {sortColumn === "nama" && (sortDirection === "asc" ? "▲" : "▼")}
+                                        </th>
                                         <th scope="col" className="px-6 py-3">Jenis Petugas</th>
-                                        <th scope="col" className="px-6 py-3">Honor Bulanan</th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 cursor-pointer"
+                                            onClick={() => handleSort("honor_bulanan")}
+                                        >
+                                            Honor Bulanan {sortColumn === "honor_bulanan" && (sortDirection === "asc" ? "▲" : "▼")}
+                                        </th>
                                         <th scope="col" className="px-6 py-3">Action</th>
                                     </tr>
                                 </thead>

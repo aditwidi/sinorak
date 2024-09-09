@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { mitra, mitra_honor_monthly } from "@/lib/db/schema"; // Import your schema
-import { eq, sql, and, like, or } from "drizzle-orm";
+import { eq, sql, and, like } from "drizzle-orm";
 
 export const revalidate = 0; // Revalidate every new data
 
@@ -14,6 +14,9 @@ export async function GET(request: Request) {
     const filterJenisPetugas = searchParams.get("filterJenisPetugas") as "Pendataan" | "Pemeriksaan" | "Pengolahan" | "" || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+
+    const sortColumn = searchParams.get("sortColumn") || "nama"; // Default sort column
+    const sortDirection = searchParams.get("sortDirection") === "desc" ? "desc" : "asc"; // Default sort direction to ascending
 
     const offset = (page - 1) * pageSize;
 
@@ -30,6 +33,15 @@ export async function GET(request: Request) {
         : sql`1 = 1`; // No filtering if month and year are not specified
 
     try {
+        // Ensure the sortColumn is a valid column name
+        const validColumns = ["nama", "honor_bulanan", "sobat_id"];
+        const sortBy = validColumns.includes(sortColumn) ? sortColumn : "nama";
+
+        // Construct the sorting dynamically in a safer way
+        const orderByClause = sortDirection === "desc"
+            ? sql`${sql.identifier(sortBy)} DESC`
+            : sql`${sql.identifier(sortBy)} ASC`;
+
         // Fetch mitra data with honor and handle cases where there is no matching data for month and year
         let mitraData = await db
             .select({
@@ -44,6 +56,7 @@ export async function GET(request: Request) {
             .leftJoin(mitra_honor_monthly, eq(mitra.sobat_id, mitra_honor_monthly.sobat_id))
             .where(and(...filters))
             .groupBy(mitra.sobat_id)
+            .orderBy(orderByClause) // Apply the safer sorting
             .limit(pageSize)
             .offset(offset)
             .all();
