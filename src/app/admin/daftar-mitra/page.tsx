@@ -175,6 +175,66 @@ export default function DaftarMitraPage() {
         }
     };    
 
+    // Helper function to generate the pagination buttons
+    const getPaginationItems = () => {
+        const items = [];
+        const maxPagesToShow = 5;
+
+        // Show the first page and dots if current page is greater than maxPagesToShow
+        if (currentPage > maxPagesToShow) {
+            items.push(
+                <button
+                    key={1}
+                    onClick={() => setCurrentPage(1)}
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${
+                        currentPage === 1 ? "text-primary-600 bg-primary-50 border-primary-300" : ""
+                    }`}
+                >
+                    1
+                </button>
+            );
+            items.push(<span key="start-dots" className="px-2">...</span>);
+        }
+
+        // Calculate the start and end page numbers
+        const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${
+                        currentPage === i
+                            ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
+                            : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
+                    }`}
+                >
+                    {i}
+                </button>
+            );
+        }
+
+        // Show the last page and dots if current page is less than total pages minus maxPagesToShow
+        if (currentPage < totalPages - maxPagesToShow + 1) {
+            items.push(<span key="end-dots" className="px-2">...</span>);
+            items.push(
+                <button
+                    key={totalPages}
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${
+                        currentPage === totalPages ? "text-primary-600 bg-primary-50 border-primary-300" : ""
+                    }`}
+                >
+                    {totalPages}
+                </button>
+            );
+        }
+
+        return items;
+    };
+
     return (
         <div className="w-full text-black">
             <Breadcrumb items={breadcrumbItems} />
@@ -337,18 +397,7 @@ export default function DaftarMitraPage() {
                                 </button>
                             </li>
                             <li className="hidden sm:flex">
-                                {[...Array(totalPages)].map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setCurrentPage(i + 1)}
-                                        className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${currentPage === i + 1
-                                            ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
-                                            : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
-                                            }`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
+                                {getPaginationItems()}
                             </li>
                             <li>
                                 <button
