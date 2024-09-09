@@ -65,6 +65,28 @@ export default function MitraDetailPage() {
         { label: "Detail Mitra" },
     ];
 
+    // Export function to fetch CSV data from the API
+    const handleExport = async () => {
+        try {
+            const response = await fetch(`/api/export-mitra?sobat_id=${validSobatId}&month=${filterMonth}&year=${filterYear}`);
+            if (!response.ok) {
+                throw new Error("Failed to export data");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "mitra_export.csv";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error exporting data:", error);
+        }
+    };
+
     // Fetch available months and years
     const fetchAvailableDates = useCallback(async () => {
         setLoadingDates(true);
@@ -197,6 +219,14 @@ export default function MitraDetailPage() {
             <Breadcrumb items={breadcrumbItems} />
 
             <h1 className="text-2xl font-bold mt-4 mb-2">Detail Mitra Statistik</h1>
+
+            {/* Export Button */}
+            <button
+                onClick={handleExport}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+            >
+                Export Data
+            </button>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Left Column - Mitra Details */}

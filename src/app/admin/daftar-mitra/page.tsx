@@ -167,6 +167,7 @@ export default function DaftarMitraPage() {
     const handleView = (sobat_id: string) => {
         router.push(`/admin/${sobat_id}/detail`);
     };
+    
 
     const handleDelete = async (sobat_id: string) => {
         const confirmed = await Swal.fire({
