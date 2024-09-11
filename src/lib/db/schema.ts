@@ -1,10 +1,10 @@
 // lib/db/db/schema.ts
-import { 
-  sqliteTable, 
-  integer, 
-  text, 
-  real, 
-  primaryKey 
+import {
+  sqliteTable,
+  integer,
+  text,
+  real,
+  primaryKey
 } from "drizzle-orm/sqlite-core";
 
 // Roles Table
@@ -26,11 +26,15 @@ export const users = sqliteTable("users", {
 export const mitra = sqliteTable("mitra", {
   sobat_id: text("sobat_id").primaryKey(),
   nik: text("nik").notNull(),
-  jenis_petugas: text("jenis_petugas").$type<"Pendataan" | "Pemeriksaan" | "Pengolahan">().notNull(), // Simulating ENUM
+  jenis_petugas: text("jenis_petugas")
+    .$type<"Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan">()
+    .notNull(), // Updated ENUM
   nama: text("nama").notNull(),
   pekerjaan: text("pekerjaan").notNull(),
   alamat: text("alamat").notNull(),
-  jenis_kelamin: text("jenis_kelamin").$type<"Laki-laki" | "Perempuan">().notNull(), // Simulating ENUM
+  jenis_kelamin: text("jenis_kelamin")
+    .$type<"Laki-laki" | "Perempuan">()
+    .notNull(),
 });
 
 // Kegiatan Table
@@ -38,13 +42,17 @@ export const kegiatan = sqliteTable("kegiatan", {
   kegiatan_id: integer("kegiatan_id").primaryKey({ autoIncrement: true }),
   nama_kegiatan: text("nama_kegiatan").notNull(),
   kode: text("kode").notNull(),
-  jenis_kegiatan: text("jenis_kegiatan").$type<"Pendataan" | "Pemeriksaan" | "Pengolahan">().notNull(), // Simulating ENUM
-  tanggal_mulai: text("tanggal_mulai").notNull(), // Store dates as TEXT
+  jenis_kegiatan: text("jenis_kegiatan")
+    .$type<"Lapangan" | "Pengolahan">()
+    .notNull(), // Updated ENUM
+  tanggal_mulai: text("tanggal_mulai").notNull(),
   tanggal_berakhir: text("tanggal_berakhir").notNull(),
   month: integer("month").notNull(),
   year: integer("year").notNull(),
-  penanggung_jawab: integer("penanggung_jawab").references(() => users.id), // Foreign key to users table
-  satuan_honor: text("satuan_honor").$type<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">().notNull(), // Simulating ENUM
+  penanggung_jawab: integer("penanggung_jawab").references(() => users.id),
+  satuan_honor: text("satuan_honor")
+    .$type<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">()
+    .notNull(),
 });
 
 // Kegiatan_Mitra Table
@@ -55,11 +63,16 @@ export const kegiatan_mitra = sqliteTable("kegiatan_mitra", {
   honor_satuan: real("honor_satuan").notNull(),
   target_volume_pekerjaan: integer("target_volume_pekerjaan").notNull(),
   total_honor: real("total_honor").notNull(),
+  status_mitra: text("status_mitra")
+    .$type<"PPL" | "PML" | "Operator" | "Supervisor">()
+    .notNull(), // New column
 });
 
 // Honor_Limit Table
 export const honor_limit = sqliteTable("honor_limit", {
-  jenis_petugas: text("jenis_petugas").$type<"Pendataan" | "Pemeriksaan" | "Pengolahan">().primaryKey(), // Simulating ENUM
+  jenis_petugas: text("jenis_petugas")
+    .$type<"Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan">()
+    .primaryKey(), // Updated ENUM
   honor_max: real("honor_max").notNull(),
 });
 
@@ -69,7 +82,7 @@ export const mitra_honor_monthly = sqliteTable("mitra_honor_monthly", {
   month: integer("month").notNull(),
   year: integer("year").notNull(),
   total_honor: real("total_honor").notNull(),
-}, 
-(table) => ({
-  pk: primaryKey(table.sobat_id, table.month, table.year), // Defining composite primary key
-}));
+},
+  (table) => ({
+    pk: primaryKey(table.sobat_id, table.month, table.year),
+  }));

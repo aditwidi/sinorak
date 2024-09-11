@@ -1,4 +1,3 @@
-// app/api/upload-single-mitra/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db/db"; // Import the Drizzle database instance
@@ -16,7 +15,7 @@ const mitraSchema = z.object({
         .regex(/^\d+$/, "NIK must contain only numbers")
         .min(1, "NIK is required")
         .max(20, "NIK cannot exceed 20 characters"),
-    jenis_petugas: z.enum(["Pendataan", "Pemeriksaan", "Pengolahan"]),
+    jenis_petugas: z.enum(["Pendataan", "Pengolahan", "Pendataan dan Pengolahan"]),
     nama: z
         .string()
         .regex(/^[a-zA-Z\s.,-]*$/, "Nama must contain only letters and spaces")
@@ -40,18 +39,32 @@ type MitraType = z.infer<typeof mitraSchema>;
 
 export async function POST(req: Request) {
     try {
-        const body: MitraType = await req.json(); // Read single entry from request body
+        const body = await req.json(); // Read single entry from request body
 
-        // Normalize 'jenis_petugas' to the correct enum type
-        const normalizedJenisPetugas = body.jenis_petugas.replace("Mitra ", "") as "Pendataan" | "Pemeriksaan" | "Pengolahan";
+        // Extract and normalize 'jenis_petugas' value
+        let jenisPetugasRaw: string = body.jenis_petugas;
+
+        if (typeof jenisPetugasRaw === "string") {
+            // Remove "Mitra" and any extra spaces or parentheses
+            jenisPetugasRaw = jenisPetugasRaw.replace(/Mitra\s*|\(|\)/g, "").trim();
+        }
+
+        // Validate if normalized 'jenis_petugas' is one of the allowed enum values
+        const validJenisPetugas = ["Pendataan", "Pengolahan", "Pendataan dan Pengolahan"];
+        if (!validJenisPetugas.includes(jenisPetugasRaw)) {
+            return NextResponse.json(
+                { error: "jenis_petugas is invalid and must be one of the allowed values." },
+                { status: 400 }
+            );
+        }
 
         // Create a new object with the correct type
         const normalized: MitraType = {
             ...body,
-            jenis_petugas: normalizedJenisPetugas,
+            jenis_petugas: jenisPetugasRaw as "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan",
         };
 
-        // Validate the entry
+        // Validate the entry using Zod
         mitraSchema.parse(normalized);
 
         // Insert the single entry into the database using Drizzle ORM

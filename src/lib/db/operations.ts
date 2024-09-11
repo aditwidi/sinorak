@@ -10,7 +10,7 @@ export async function getUserBynip(nip: string) {
     .select({
       id: users.id,
       nip: users.nip,
-      name: users.name, // Include the new name field
+      name: users.name,
       password: users.password,
       roleId: users.roleId,
     })
@@ -26,7 +26,7 @@ export async function getUserWithRoleBynip(nip: string) {
     .select({
       id: users.id,
       nip: users.nip,
-      name: users.name, // Include the new name field
+      name: users.name,
       password: users.password,
       role: roles.name,
     })
@@ -40,14 +40,12 @@ export async function getUserWithRoleBynip(nip: string) {
 
 // Create a new user with a role
 export async function createUser(nip: string, name: string, password: string, roleName: string) {
-  // Fetch the role based on the provided roleName
   const role = await db.select().from(roles).where(eq(roles.name, roleName)).get();
   if (!role) throw new Error("Role not found");
 
-  // Insert a new user with the name field included
   const result = await db.insert(users).values({
     nip,
-    name, // Add the name field
+    name,
     password,
     roleId: role.id,
   }).run();
@@ -57,12 +55,11 @@ export async function createUser(nip: string, name: string, password: string, ro
 
 // Update user password by ID
 export async function updateUserPassword(userId: number, newPassword: string) {
-  // Hash the new password before updating
   const hashedPassword = saltAndHashPassword(newPassword);
 
   const result = await db
     .update(users)
-    .set({ password: hashedPassword }) // Save the hashed password
+    .set({ password: hashedPassword })
     .where(eq(users.id, userId))
     .run();
 
@@ -71,12 +68,11 @@ export async function updateUserPassword(userId: number, newPassword: string) {
 
 // Update user role by ID
 export async function updateUserRole(userId: number, newRole: "admin" | "user") {
-  // Determine the role ID based on the role name
-  const roleId = newRole === "admin" ? 1 : 2; // Make sure these role IDs are correct for your schema
+  const roleId = newRole === "admin" ? 1 : 2;
 
   const result = await db
     .update(users)
-    .set({ roleId }) // Update roleId column in the users table
+    .set({ roleId })
     .where(eq(users.id, userId))
     .run();
 
@@ -87,7 +83,7 @@ export async function updateUserRole(userId: number, newRole: "admin" | "user") 
 export async function createMitra(data: {
   sobat_id: string;
   nik: string;
-  jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+  jenis_petugas: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan"; // Updated ENUM
   nama: string;
   pekerjaan: string;
   alamat: string;
@@ -106,9 +102,9 @@ export async function createMitra(data: {
   return result;
 }
 
+// Function to delete a mitra and related records
 export async function deleteMitra(sobat_id: string) {
   try {
-      // Delete related records in the correct order without using explicit transactions
       await db.delete(mitra_honor_monthly).where(eq(mitra_honor_monthly.sobat_id, sobat_id));
       await db.delete(kegiatan_mitra).where(eq(kegiatan_mitra.sobat_id, sobat_id));
       await db.delete(mitra).where(eq(mitra.sobat_id, sobat_id));

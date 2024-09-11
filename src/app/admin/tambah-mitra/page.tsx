@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2"; // Import SweetAlert2
-import Breadcrumb from "@/components/Breadcrumb"; // Import Breadcrumb component
-import { LoadingIndicator } from "@/components/LoadingIndicator"; // Import LoadingIndicator component
-import Skeleton from "react-loading-skeleton"; // Import the Skeleton component
-import "react-loading-skeleton/dist/skeleton.css"; // Import the Skeleton CSS
+import Swal from "sweetalert2";
+import Breadcrumb from "@/components/Breadcrumb";
+import { LoadingIndicator } from "@/components/LoadingIndicator";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface BreadcrumbItem {
     label: string;
@@ -15,19 +15,19 @@ interface BreadcrumbItem {
 }
 
 export default function TambahMitraPage() {
-    const { data: session, status } = useSession(); // Get session data
+    const { data: session, status } = useSession();
     const router = useRouter();
-    // State for form fields
-    const [sobatId, setSobatId] = useState(""); // Corresponds to 'sobat_id' in schema
-    const [nik, setNik] = useState(""); // Corresponds to 'nik' in schema
-    const [jenisPetugas, setJenisPetugas] = useState<"Pendataan" | "Pemeriksaan" | "Pengolahan">("Pendataan"); // Default value
-    const [nama, setNama] = useState(""); // Corresponds to 'nama' in schema
-    const [pekerjaan, setPekerjaan] = useState(""); // Corresponds to 'pekerjaan' in schema
-    const [alamat, setAlamat] = useState(""); // Corresponds to 'alamat' in schema
-    const [jenisKelamin, setJenisKelamin] = useState<"Laki-laki" | "Perempuan">("Laki-laki"); // Default value
-    const [loading, setLoading] = useState(false); // Loading state for form submission
 
-    // Define breadcrumb items
+    // State for form fields
+    const [sobatId, setSobatId] = useState("");
+    const [nik, setNik] = useState("");
+    const [jenisPetugas, setJenisPetugas] = useState<"Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan">("Pendataan"); // Updated ENUM
+    const [nama, setNama] = useState("");
+    const [pekerjaan, setPekerjaan] = useState("");
+    const [alamat, setAlamat] = useState("");
+    const [jenisKelamin, setJenisKelamin] = useState<"Laki-laki" | "Perempuan">("Laki-laki");
+    const [loading, setLoading] = useState(false);
+
     const breadcrumbItems: BreadcrumbItem[] = [
         { label: "Mitra Statistik" },
         { label: "Tambah Data Mitra Statistik" }
@@ -36,32 +36,32 @@ export default function TambahMitraPage() {
     // Input validation functions
     const handleSobatIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^\d*$/.test(value)) { // Only allow numbers
+        if (/^\d*$/.test(value)) {
             setSobatId(value);
         }
     };
 
     const handleNikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^\d*$/.test(value)) { // Only allow numbers
+        if (/^\d*$/.test(value)) {
             setNik(value);
         }
     };
 
     const handleNamaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (/^[a-zA-Z\s.,-]*$/.test(value)) { // Allow letters, spaces, periods, commas, and hyphens
+        if (/^[a-zA-Z\s.,-]*$/.test(value)) {
             setNama(value);
         }
     };
 
     const handlePekerjaanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, ""); // Remove special characters
+        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, "");
         setPekerjaan(value);
     };
 
     const handleAlamatChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const value = e.target.value.replace(/[^a-zA-Z0-9\s,.-]/g, ""); // Allow letters, numbers, spaces, commas, periods, and hyphens
+        const value = e.target.value.replace(/[^a-zA-Z0-9\s,.-]/g, "");
         setAlamat(value);
     };
 
@@ -71,7 +71,7 @@ export default function TambahMitraPage() {
 
         try {
             const response = await fetch("/api/tambah-mitra", {
-                method: "POST", // Ensure the method is POST
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     sobat_id: sobatId,
@@ -87,23 +87,20 @@ export default function TambahMitraPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                // Show error alert with SweetAlert2
                 Swal.fire({
                     icon: "error",
                     title: "Error",
                     text: data.error || "Terjadi kesalahan saat menambahkan mitra.",
                 });
             } else {
-                // Show success alert with SweetAlert2
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil",
                     text: "Mitra berhasil ditambahkan.",
                 }).then(() => {
-                    router.push("/admin/daftar-mitra"); // Redirect back to the main page after success
+                    router.push("/admin/daftar-mitra");
                 });
 
-                // Clear the form fields after successful submission
                 setSobatId("");
                 setNik("");
                 setJenisPetugas("Pendataan");
@@ -114,7 +111,6 @@ export default function TambahMitraPage() {
             }
         } catch (error) {
             console.error("Error:", error);
-            // Show error alert with SweetAlert2
             Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -125,24 +121,19 @@ export default function TambahMitraPage() {
         }
     };
 
-    // Function to handle redirect to the Upload Mitra page
     const handleRedirectToUpload = () => {
         router.push("/admin/upload-mitra");
     };
 
     return (
         <div className="w-full text-black">
-            {/* Breadcrumb */}
             <Breadcrumb items={breadcrumbItems} />
 
-            {/* Page Title */}
             <h1 className="text-2xl font-bold mt-4">Tambah Data Mitra Statistik</h1>
 
-            {/* Form Section */}
             <div className="mt-6 space-y-8">
                 <section>
                     <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
-                        {/* Sobat ID - NIK */}
                         <div>
                             <label htmlFor="sobat_id" className="block text-sm font-medium text-gray-700">
                                 Sobat ID
@@ -172,7 +163,6 @@ export default function TambahMitraPage() {
                             />
                         </div>
 
-                        {/* Jenis Petugas - Jenis Kelamin */}
                         <div>
                             <label htmlFor="jenis-petugas" className="block text-sm font-medium text-gray-700">
                                 Jenis Petugas
@@ -180,12 +170,12 @@ export default function TambahMitraPage() {
                             <select
                                 id="jenis-petugas"
                                 value={jenisPetugas}
-                                onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan")}
+                                onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan")}
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                             >
                                 <option value="Pendataan">Pendataan</option>
-                                <option value="Pemeriksaan">Pemeriksaan</option>
                                 <option value="Pengolahan">Pengolahan</option>
+                                <option value="Pendataan dan Pengolahan">Pendataan dan Pengolahan</option>
                             </select>
                         </div>
                         <div>
@@ -203,7 +193,6 @@ export default function TambahMitraPage() {
                             </select>
                         </div>
 
-                        {/* Nama - Pekerjaan */}
                         <div>
                             <label htmlFor="nama" className="block text-sm font-medium text-gray-700">
                                 Nama
@@ -233,7 +222,6 @@ export default function TambahMitraPage() {
                             />
                         </div>
 
-                        {/* Alamat Field - Single Column */}
                         <div className="md:col-span-2">
                             <label htmlFor="alamat" className="block text-sm font-medium text-gray-700">
                                 Alamat
@@ -248,7 +236,6 @@ export default function TambahMitraPage() {
                             ></textarea>
                         </div>
 
-                        {/* Submit Button */}
                         <div className="md:col-span-2 flex pb-4">
                             <button
                                 type="submit"
@@ -263,14 +250,11 @@ export default function TambahMitraPage() {
                 </section>
             </div>
 
-            {/* Divider */}
             <hr className="my-8 border-gray-300" />
 
-            {/* Page Title */}
             <h1 className="text-xl font-bold mt-4">Upload Data Mitra</h1>
             <p className="text-sm text-gray-600">Fitur upload data mitra digunakan untuk menambahkan data mitra secara batch.</p>
 
-            {/* Option to upload data */}
             <div className="mt-6 pb-6">
                 <button
                     onClick={handleRedirectToUpload}

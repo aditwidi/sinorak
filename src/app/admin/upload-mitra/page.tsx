@@ -74,7 +74,6 @@ export default function UploadMitra() {
             return;
         }
 
-        // Show a loading popup in Bahasa Indonesia
         Swal.fire({
             title: "Mengupload...",
             text: "Mohon tunggu, file sedang diupload.",
@@ -96,7 +95,6 @@ export default function UploadMitra() {
                 const sheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                // Explicitly cast the first row to string[] type
                 const headers = jsonData[0] as string[];
                 if (!validateHeaders(headers)) {
                     Swal.fire({
@@ -109,13 +107,18 @@ export default function UploadMitra() {
                     return;
                 }
 
-                // Process each row one by one (skip header row)
                 for (let i = 1; i < jsonData.length; i++) {
                     const row = jsonData[i] as string[];
                     const rowData = headers.reduce((acc, key, index) => {
                         acc[key] = row[index];
                         return acc;
                     }, {} as Record<string, any>);
+
+                    // Check for required fields before uploading
+                    if (!rowData["jenis_petugas"]) {
+                        console.warn("Skipping row due to missing 'jenis_petugas'");
+                        continue;
+                    }
 
                     try {
                         await uploadRow(rowData);
@@ -128,7 +131,7 @@ export default function UploadMitra() {
                             text: "Kesalahan saat mengupload baris: " + errorMessage
                         });
                         setLoading(false);
-                        setProcessing(false); // Stop further processing on error
+                        setProcessing(false);
                         return;
                     }
                 }
@@ -142,8 +145,7 @@ export default function UploadMitra() {
 
             fileReader.readAsBinaryString(selectedFile);
         } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : "Gagal membaca file.";
+            const errorMessage = error instanceof Error ? error.message : "Gagal membaca file.";
 
             console.error("Kesalahan saat membaca file:", errorMessage);
             Swal.fire({
@@ -153,7 +155,7 @@ export default function UploadMitra() {
             });
         } finally {
             setLoading(false);
-            setProcessing(false); // Hide the loading indicator once processing is complete
+            setProcessing(false);
         }
     };
 

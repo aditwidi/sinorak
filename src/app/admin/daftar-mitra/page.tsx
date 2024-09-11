@@ -23,10 +23,10 @@ interface BreadcrumbItem {
 interface MitraData {
     sobat_id: string;
     nama: string;
-    jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
-    honor_bulanan: number | null; // honor_bulanan can be null
-    month: number | null; // Include month to allow filtering
-    year: number | null; // Include year to allow filtering
+    jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan" | "Pendataan dan Pengolahan"; // Include "Pendataan dan Pengolahan"
+    honor_bulanan: number | null;
+    month: number | null;
+    year: number | null;
 }
 
 export default function DaftarMitraPage() {
@@ -38,7 +38,7 @@ export default function DaftarMitraPage() {
     const [mitraData, setMitraData] = useState<MitraData[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
-    const [deleteLoading, setDeleteLoading] = useState<boolean>(false); // State for delete loading
+    const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
@@ -50,8 +50,8 @@ export default function DaftarMitraPage() {
     const [availableYears, setAvailableYears] = useState<number[]>([
         parseInt(currentYear),
     ]);
-    const [sortColumn, setSortColumn] = useState<string>("nama"); // Default sort column
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // Default sort direction
+    const [sortColumn, setSortColumn] = useState<string>("nama");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
     const itemsPerPage = 10;
 
     const router = useRouter();
@@ -68,22 +68,16 @@ export default function DaftarMitraPage() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    const months =
-                        data.months.length > 0 ? data.months : [parseInt(currentMonth)];
-                    const years =
-                        data.years.length > 0 ? data.years : [parseInt(currentYear)];
+                    const months = data.months.length > 0 ? data.months : [parseInt(currentMonth)];
+                    const years = data.years.length > 0 ? data.years : [parseInt(currentYear)];
 
                     setAvailableMonths(months);
                     setAvailableYears(years);
 
-                    // Set the smallest month and year as the default filter
                     setFilterMonth(Math.min(...months).toString());
                     setFilterYear(Math.min(...years).toString());
                 } else {
-                    console.error(
-                        "Failed to fetch available months and years:",
-                        data.error
-                    );
+                    console.error("Failed to fetch available months and years:", data.error);
                 }
             } catch (error) {
                 console.error("Error fetching available months and years:", error);
@@ -139,12 +133,10 @@ export default function DaftarMitraPage() {
 
     const handleSort = (column: string) => {
         if (sortColumn === column) {
-            // If already sorting by this column, toggle the direction
             setSortDirection((prevDirection) =>
                 prevDirection === "asc" ? "desc" : "asc"
             );
         } else {
-            // Otherwise, set to this column and default to ascending
             setSortColumn(column);
             setSortDirection("asc");
         }
@@ -167,7 +159,6 @@ export default function DaftarMitraPage() {
     const handleView = (sobat_id: string) => {
         router.push(`/admin/${sobat_id}/detail`);
     };
-    
 
     const handleDelete = async (sobat_id: string) => {
         const confirmed = await Swal.fire({
@@ -183,28 +174,21 @@ export default function DaftarMitraPage() {
 
         if (!confirmed.isConfirmed) return;
 
-        setDeleteLoading(true); // Set delete loading to true
+        setDeleteLoading(true);
 
         try {
-            // Step 1: Delete from kegiatan_mitra
             let response = await fetch(
                 `/api/delete-kegiatan-mitra?sobat_id=${sobat_id}`,
-                {
-                    method: "DELETE",
-                }
+                { method: "DELETE" }
             );
             if (!response.ok) throw new Error("Failed to delete kegiatan_mitra.");
 
-            // Step 2: Delete from mitra_honor_monthly
             response = await fetch(
                 `/api/delete-honor-mitra-monthly?sobat_id=${sobat_id}`,
-                {
-                    method: "DELETE",
-                }
+                { method: "DELETE" }
             );
             if (!response.ok) throw new Error("Failed to delete mitra_honor_monthly.");
 
-            // Step 3: Delete from mitra
             response = await fetch(`/api/delete-mitra?sobat_id=${sobat_id}`, {
                 method: "DELETE",
             });
@@ -212,7 +196,6 @@ export default function DaftarMitraPage() {
 
             Swal.fire("Berhasil!", "Data mitra berhasil dihapus.", "success");
 
-            // Remove the deleted mitra from the UI
             setMitraData((prevData) =>
                 prevData.filter((mitra) => mitra.sobat_id !== sobat_id)
             );
@@ -221,16 +204,14 @@ export default function DaftarMitraPage() {
             console.error("Error deleting mitra:", error);
             Swal.fire("Error!", "Gagal menghapus data mitra.", "error");
         } finally {
-            setDeleteLoading(false); // Set delete loading to false
+            setDeleteLoading(false);
         }
     };
 
-    // Helper function to generate the pagination buttons
     const getPaginationItems = () => {
         const items = [];
         const maxPagesToShow = 5;
 
-        // Show the first page and dots if current page is greater than maxPagesToShow
         if (currentPage > maxPagesToShow) {
             items.push(
                 <button
@@ -247,7 +228,6 @@ export default function DaftarMitraPage() {
             items.push(<span key="start-dots" className="px-2">...</span>);
         }
 
-        // Calculate the start and end page numbers
         const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
         const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
 
@@ -266,7 +246,6 @@ export default function DaftarMitraPage() {
             );
         }
 
-        // Show the last page and dots if current page is less than total pages minus maxPagesToShow
         if (currentPage < totalPages - maxPagesToShow + 1) {
             items.push(<span key="end-dots" className="px-2">...</span>);
             items.push(
@@ -284,6 +263,37 @@ export default function DaftarMitraPage() {
         }
 
         return items;
+    };
+
+    // Helper function to format jenis_petugas
+    const formatJenisPetugas = (jenis_petugas: string) => {
+        if (jenis_petugas === "Pendataan dan Pengolahan") {
+            return (
+                <>
+                    <span className="px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full mr-1">
+                        Pendataan
+                    </span>
+                    <span className="px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full">
+                        Pengolahan
+                    </span>
+                </>
+            );
+        } else {
+            const colorClasses =
+                jenis_petugas === "Pendataan"
+                    ? "text-blue-800 bg-blue-100"
+                    : jenis_petugas === "Pemeriksaan"
+                        ? "text-green-800 bg-green-100"
+                        : "text-yellow-800 bg-yellow-100";
+
+            return (
+                <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${colorClasses}`}
+                >
+                    {jenis_petugas}
+                </span>
+            );
+        }
     };
 
     return (
@@ -341,10 +351,10 @@ export default function DaftarMitraPage() {
                         value={filterJenisPetugas}
                         onChange={(e) => setFilterJenisPetugas(e.target.value)}
                     >
-                        <option value="">Jenis Petugas</option>
+                        <option value="">Jenis Mitra</option>
                         <option value="Pendataan">Pendataan</option>
-                        <option value="Pemeriksaan">Pemeriksaan</option>
                         <option value="Pengolahan">Pengolahan</option>
+                        <option value="Pendataan dan Pengolahan">Pendataan dan Pengolahan</option>
                     </select>
                 </div>
             </div>
@@ -379,7 +389,7 @@ export default function DaftarMitraPage() {
                                             )}
                                         </th>
                                         <th scope="col" className="px-6 py-3">
-                                            Jenis Petugas
+                                            Jenis Mitra
                                         </th>
                                         <th
                                             scope="col"
@@ -419,16 +429,7 @@ export default function DaftarMitraPage() {
                                                 </th>
                                                 <td className="px-6 py-4">{mitra.nama}</td>
                                                 <td className="px-6 py-4">
-                                                    <span
-                                                        className={`px-2 py-1 text-xs font-medium rounded-full ${mitra.jenis_petugas === "Pendataan"
-                                                                ? "text-blue-800 bg-blue-100"
-                                                                : mitra.jenis_petugas === "Pemeriksaan"
-                                                                    ? "text-green-800 bg-green-100"
-                                                                    : "text-yellow-800 bg-yellow-100"
-                                                            }`}
-                                                    >
-                                                        {mitra.jenis_petugas}
-                                                    </span>
+                                                    {formatJenisPetugas(mitra.jenis_petugas)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {mitra.honor_bulanan !== null

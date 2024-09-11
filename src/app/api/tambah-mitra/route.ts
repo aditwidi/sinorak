@@ -15,7 +15,7 @@ const mitraSchema = z.object({
         .regex(/^\d+$/, "NIK must contain only numbers")
         .min(1, "NIK is required")
         .max(20, "NIK cannot exceed 20 characters"),
-    jenis_petugas: z.enum(["Pendataan", "Pemeriksaan", "Pengolahan"]),
+    jenis_petugas: z.enum(["Pendataan", "Pengolahan", "Pendataan dan Pengolahan"]),
     nama: z
         .string()
         .regex(/^[a-zA-Z\s.,-]*$/, "Nama must contain only letters and spaces")
