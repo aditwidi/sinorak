@@ -14,8 +14,7 @@ export async function GET(request: Request) {
     const filterMonth = searchParams.get("filterMonth") || "";
     const filterYear = searchParams.get("filterYear") || "";
     const filterJenisKegiatan = searchParams.get("filterJenisKegiatan") as
-        | "Pendataan"
-        | "Pemeriksaan"
+        | "Lapangan"
         | "Pengolahan"
         | ""
         || "";
