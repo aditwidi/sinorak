@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const searchTerm = searchParams.get("searchTerm") || "";
     const filterMonth = searchParams.get("filterMonth") || "";
     const filterYear = searchParams.get("filterYear") || "";
-    const filterJenisPetugas = searchParams.get("filterJenisPetugas") as "Pendataan" | "Pemeriksaan" | "Pengolahan" | "" || "";
+    const filterJenisPetugas = searchParams.get("filterJenisPetugas") as "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan" | "" || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
