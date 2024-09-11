@@ -35,8 +35,7 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const [activities, setActivities] = useState<Activity[]>([]); // State for activities data
   const [loading, setLoading] = useState<boolean>(true); // Loading state for fetching activities
-  const [pendataanCount, setPendataanCount] = useState<number>(0);
-  const [pemeriksaanCount, setPemeriksaanCount] = useState<number>(0);
+  const [lapanganCount, setLapanganCount] = useState<number>(0);
   const [pengolahanCount, setPengolahanCount] = useState<number>(0);
   const [totalHonor, setTotalHonor] = useState<number>(0); // State for total honor
   const [loadingCounts, setLoadingCounts] = useState<boolean>(true);
@@ -132,26 +131,25 @@ export default function AdminPage() {
 
   // Fetch mitra counts on component mount
   useEffect(() => {
-    const fetchMitraCounts = async () => {
+    const fetchKegiatanCounts = async () => {
       try {
-        const response = await fetch("/api/mitra-counts");
+        const response = await fetch("/api/kegiatan-count");
         const data = await response.json();
 
         if (response.ok) {
-          setPendataanCount(data.pendataanCount ?? 0);
-          setPemeriksaanCount(data.pemeriksaanCount ?? 0);
+          setLapanganCount(data.lapanganCount ?? 0);
           setPengolahanCount(data.pengolahanCount ?? 0);
         } else {
-          console.error("Failed to fetch mitra counts:", data.error);
+          console.error("Failed to fetch kegiatan counts:", data.error);
         }
       } catch (error) {
-        console.error("Error fetching mitra counts:", error);
+        console.error("Error fetching kegiatan counts:", error);
       } finally {
         setLoadingCounts(false);
       }
     };
 
-    fetchMitraCounts();
+    fetchKegiatanCounts();
   }, []);
 
   return (
@@ -173,9 +171,9 @@ export default function AdminPage() {
         {loadingCounts ? (
           <>
             {/* Skeleton for Stat Cards */}
-            <Skeleton height={100} width="100%" />
-            <Skeleton height={100} width="100%" />
-            <Skeleton height={100} width="100%" />
+            <Skeleton height={150} width="100%" />
+            <Skeleton height={150} width="100%" />
+            <Skeleton height={150} width="100%" />
           </>
         ) : (
           <>
@@ -183,13 +181,13 @@ export default function AdminPage() {
             <StatCard
               title="Total Kegiatan Lapangan"
               subtitle="Bulan Ini"
-              value="0"
+              value={lapanganCount.toString()}
               icon={<ClipboardDocumentIcon className="w-6 h-6 text-blue-500" />}
             />
             <StatCard
               title="Total Kegiatan Pengolahan"
               subtitle="Bulan Ini"
-              value="0"
+              value={pengolahanCount.toString()}
               icon={<ClipboardDocumentIcon className="w-6 h-6 text-yellow-500" />}
             />
             <StatCard
@@ -305,10 +303,8 @@ export default function AdminPage() {
                       <td className="px-6 py-4">{activity.kode}</td>
                       <td className="px-6 py-4">{activity.penanggung_jawab}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.jenis_kegiatan === "Pendataan"
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.jenis_kegiatan === "Lapangan"
                             ? "text-blue-800 bg-blue-100"
-                            : activity.jenis_kegiatan === "Pemeriksaan"
-                              ? "text-green-800 bg-green-100"
                               : "text-yellow-800 bg-yellow-100"
                           }`}>
                           {activity.jenis_kegiatan}

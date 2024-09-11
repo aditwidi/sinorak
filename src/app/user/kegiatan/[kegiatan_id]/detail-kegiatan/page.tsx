@@ -16,7 +16,16 @@ interface KegiatanDetail {
     tanggal_mulai: string;
     tanggal_berakhir: string;
     honor_satuan: number;
-    satuan_honor: "Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden";
+    satuan_honor:
+    | "Dokumen"
+    | "OB"
+    | "BS"
+    | "Rumah Tangga"
+    | "Pasar"
+    | "Keluarga"
+    | "SLS"
+    | "Desa"
+    | "Responden";
 }
 
 interface Peserta {
@@ -24,6 +33,7 @@ interface Peserta {
     nama: string;
     target: number;
     honor: number;
+    status_mitra: "PPL" | "PML" | "Operator" | "Supervisor"; // Add status_mitra field
 }
 
 interface KegiatanDetailResponse {
@@ -40,7 +50,9 @@ export default function DetailKegiatanPage() {
     // Ensure kegiatan_id is a string
     const validKegiatanId = Array.isArray(kegiatan_id) ? kegiatan_id[0] : kegiatan_id;
 
-    const [kegiatanDetail, setKegiatanDetail] = useState<KegiatanDetail | null>(null);
+    const [kegiatanDetail, setKegiatanDetail] = useState<KegiatanDetail | null>(
+        null
+    );
     const [pesertaList, setPesertaList] = useState<Peserta[]>([]);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(true);
     const [loadingPeserta, setLoadingPeserta] = useState<boolean>(true);
@@ -51,8 +63,8 @@ export default function DetailKegiatanPage() {
 
     // Breadcrumb items
     const breadcrumbItems = [
-        { label: "Kegiatan Statistik", href: "/user/daftar-kegiatan" },
-        { label: "Detail Kegiatan" }
+        { label: "Kegiatan Statistik", href: "/admin/daftar-kegiatan" },
+        { label: "Detail Kegiatan" },
     ];
 
     // Fetch Kegiatan Detail and Peserta List
@@ -62,7 +74,9 @@ export default function DetailKegiatanPage() {
         setLoadingDetail(true);
         setLoadingPeserta(true);
         try {
-            const response = await fetch(`/api/detail-kegiatan?kegiatan_id=${validKegiatanId}`);
+            const response = await fetch(
+                `/api/detail-kegiatan?kegiatan_id=${validKegiatanId}`
+            );
             const data: KegiatanDetailResponse = await response.json();
 
             if (response.ok) {
@@ -91,7 +105,8 @@ export default function DetailKegiatanPage() {
     };
 
     const handleNextPage = () => {
-        if (currentPage * itemsPerPage < filteredPesertaList.length) setCurrentPage(currentPage + 1);
+        if (currentPage * itemsPerPage < filteredPesertaList.length)
+            setCurrentPage(currentPage + 1);
     };
 
     // Filter the peserta list based on the search term
@@ -133,14 +148,34 @@ export default function DetailKegiatanPage() {
                         kegiatanDetail && (
                             <div className="p-4 border border-gray-300 rounded-md shadow-md">
                                 <h2 className="text-lg font-semibold mb-4">Detail Kegiatan</h2>
-                                <p className="text-sm sm:text-base"><strong>Nama Kegiatan:</strong> {kegiatanDetail.nama_kegiatan}</p>
-                                <p className="text-sm sm:text-base"><strong>Kode Kegiatan:</strong> {kegiatanDetail.kode}</p>
-                                <p className="text-sm sm:text-base"><strong>Penanggung Jawab:</strong> {kegiatanDetail.penanggung_jawab}</p>
-                                <p className="text-sm sm:text-base"><strong>Jenis Kegiatan:</strong> {kegiatanDetail.jenis_kegiatan}</p>
-                                <p className="text-sm sm:text-base"><strong>Tanggal Mulai:</strong> {formatDate(kegiatanDetail.tanggal_mulai)}</p>
-                                <p className="text-sm sm:text-base"><strong>Tanggal Berakhir:</strong> {formatDate(kegiatanDetail.tanggal_berakhir)}</p>
-                                <p className="text-sm sm:text-base"><strong>Honor Satuan:</strong> Rp {(kegiatanDetail.honor_satuan ?? 0).toLocaleString()}</p>
-                                <p className="text-sm sm:text-base"><strong>Satuan Honor:</strong> {kegiatanDetail.satuan_honor}</p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Nama Kegiatan:</strong> {kegiatanDetail.nama_kegiatan}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Kode Kegiatan:</strong> {kegiatanDetail.kode}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Penanggung Jawab:</strong>{" "}
+                                    {kegiatanDetail.penanggung_jawab}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Jenis Kegiatan:</strong> {kegiatanDetail.jenis_kegiatan}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Tanggal Mulai:</strong>{" "}
+                                    {formatDate(kegiatanDetail.tanggal_mulai)}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Tanggal Berakhir:</strong>{" "}
+                                    {formatDate(kegiatanDetail.tanggal_berakhir)}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Honor Satuan:</strong> Rp{" "}
+                                    {(kegiatanDetail.honor_satuan ?? 0).toLocaleString()}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Satuan Honor:</strong> {kegiatanDetail.satuan_honor}
+                                </p>
                             </div>
                         )
                     )}
@@ -170,24 +205,45 @@ export default function DetailKegiatanPage() {
                                 <table className="min-w-full text-sm text-left text-gray-500">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                         <tr>
-                                            <th scope="col" className="px-2 py-2">SOBAT ID</th>
-                                            <th scope="col" className="px-2 py-2">Nama</th>
-                                            <th scope="col" className="px-2 py-2">Target</th>
-                                            <th scope="col" className="px-2 py-2">Honor</th>
+                                            <th scope="col" className="px-2 py-2">
+                                                SOBAT ID
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Nama
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Target
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Honor
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Status Mitra
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {paginatedPesertaList.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="text-center py-4">Tidak ada data mitra yang ditemukan</td>
+                                                <td colSpan={5} className="text-center py-4">
+                                                    Tidak ada data mitra yang ditemukan
+                                                </td>
                                             </tr>
                                         ) : (
                                             paginatedPesertaList.map((peserta, index) => (
-                                                <tr key={index} className="bg-white border-b hover:bg-gray-50">
-                                                    <td className="px-2 py-4 font-medium text-gray-900">{peserta.sobat_id}</td>
+                                                <tr
+                                                    key={index}
+                                                    className="bg-white border-b hover:bg-gray-50"
+                                                >
+                                                    <td className="px-2 py-4 font-medium text-gray-900">
+                                                        {peserta.sobat_id}
+                                                    </td>
                                                     <td className="px-2 py-4">{peserta.nama}</td>
                                                     <td className="px-2 py-4">{peserta.target}</td>
-                                                    <td className="px-2 py-4">Rp {peserta.honor.toLocaleString()}</td>
+                                                    <td className="px-2 py-4">
+                                                        Rp {peserta.honor.toLocaleString()}
+                                                    </td>
+                                                    <td className="px-2 py-4">{peserta.status_mitra}</td>
                                                 </tr>
                                             ))
                                         )}
@@ -197,7 +253,9 @@ export default function DetailKegiatanPage() {
 
                             {/* Total Honor Section After Table */}
                             <div className="flex justify-between p-4 bg-white dark:bg-gray-800">
-                                <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Total Honor Kegiatan:</p>
+                                <p className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                                    Total Honor Kegiatan:
+                                </p>
                                 <p className="text-sm font-semibold text-right text-gray-900 dark:text-white">
                                     Rp {totalHonor.toLocaleString()}
                                 </p>
@@ -222,26 +280,34 @@ export default function DetailKegiatanPage() {
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
                                             className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage === 1
-                                                ? "cursor-not-allowed opacity-50"
-                                                : "hover:bg-gray-100 hover:text-gray-700"
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-l`}
                                         >
-                                            <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                                            <ChevronLeftIcon
+                                                className="w-4 h-4 sm:w-5 sm:h-5"
+                                                aria-hidden="true"
+                                            />
                                         </button>
                                     </li>
                                     <li>
-                                        <span className="px-1 py-1 text-xs sm:px-2 sm:py-1.5 text-gray-700">{currentPage}</span>
+                                        <span className="px-1 py-1 text-xs sm:px-2 sm:py-1.5 text-gray-700">
+                                            {currentPage}
+                                        </span>
                                     </li>
                                     <li>
                                         <button
                                             onClick={handleNextPage}
                                             disabled={currentPage * itemsPerPage >= filteredPesertaList.length}
                                             className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= filteredPesertaList.length
-                                                ? "cursor-not-allowed opacity-50"
-                                                : "hover:bg-gray-100 hover:text-gray-700"
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-r`}
                                         >
-                                            <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                                            <ChevronRightIcon
+                                                className="w-4 h-4 sm:w-5 sm:h-5"
+                                                aria-hidden="true"
+                                            />
                                         </button>
                                     </li>
                                 </ul>

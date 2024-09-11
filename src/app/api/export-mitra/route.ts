@@ -1,20 +1,20 @@
 // src/app/api/export-mitra/route.ts
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db/db'; // Import your database configuration
-import { kegiatan, kegiatan_mitra, mitra, mitra_honor_monthly } from '@/lib/db/schema'; // Corrected Import Path for schema
-import { parse } from 'json2csv';
+import { db } from '@/lib/db/db';
+import { kegiatan, kegiatan_mitra, mitra, mitra_honor_monthly } from '@/lib/db/schema';
+import ExcelJS from 'exceljs'; // Import exceljs
 import { eq, and } from 'drizzle-orm';
 
 // Define the expected data structure
 interface ExportData {
-  nama_kegiatan: string;
-  tanggal_mulai: string;
-  tanggal_berakhir: string;
-  target_volume_pekerjaan: number | null;
-  satuan_honor: string;
-  honor_satuan: number | null;
-  total_honor: number | null;
-  kode: string;
+    nama_kegiatan: string;
+    tanggal_mulai: string;
+    tanggal_berakhir: string;
+    target_volume_pekerjaan: number | null;
+    satuan_honor: string;
+    honor_satuan: number | null;
+    total_honor: number | null;
+    kode: string;
 }
 
 // Function to format a date in "DD MMMM YYYY" format
@@ -51,64 +51,81 @@ export async function GET(req: Request) {
             total_honor: kegiatan_mitra.total_honor,
             kode: kegiatan.kode,
         })
-        .from(kegiatan)
-        .leftJoin(kegiatan_mitra, eq(kegiatan.kegiatan_id, kegiatan_mitra.kegiatan_id))
-        .leftJoin(mitra, eq(mitra.sobat_id, kegiatan_mitra.sobat_id))
-        .where(
-            and(
-                eq(mitra.sobat_id, sobat_id),
-                eq(kegiatan.month, parseInt(month)),
-                eq(kegiatan.year, parseInt(year))
+            .from(kegiatan)
+            .leftJoin(kegiatan_mitra, eq(kegiatan.kegiatan_id, kegiatan_mitra.kegiatan_id))
+            .leftJoin(mitra, eq(mitra.sobat_id, kegiatan_mitra.sobat_id))
+            .where(
+                and(
+                    eq(mitra.sobat_id, sobat_id),
+                    eq(kegiatan.month, parseInt(month)),
+                    eq(kegiatan.year, parseInt(year))
+                )
             )
-        )
-        .orderBy(kegiatan.nama_kegiatan, kegiatan_mitra.kegiatan_id);
+            .orderBy(kegiatan.nama_kegiatan, kegiatan_mitra.kegiatan_id);
 
         // Fetch the total honor for the selected month and year
         const totalHonorData = await db.select({
             total_honor: mitra_honor_monthly.total_honor,
         })
-        .from(mitra_honor_monthly)
-        .where(
-            and(
-                eq(mitra_honor_monthly.sobat_id, sobat_id),
-                eq(mitra_honor_monthly.month, parseInt(month)),
-                eq(mitra_honor_monthly.year, parseInt(year))
-            )
-        );
+            .from(mitra_honor_monthly)
+            .where(
+                and(
+                    eq(mitra_honor_monthly.sobat_id, sobat_id),
+                    eq(mitra_honor_monthly.month, parseInt(month)),
+                    eq(mitra_honor_monthly.year, parseInt(year))
+                )
+            );
 
         // Get the total honor from the query
         const totalHonor = totalHonorData.length > 0 ? totalHonorData[0].total_honor : 0;
 
-        // Prepare the data in the desired format
-        const formattedData = data.map((row: ExportData) => ({
-            "Nama Kegiatan": row.nama_kegiatan,
-            "Periode Waktu": `${formatDate(row.tanggal_mulai)} s.d ${formatDate(row.tanggal_berakhir)}`,
-            "Target Volume Pekerjaan": row.target_volume_pekerjaan ?? 0,
-            "Satuan Honor": row.satuan_honor,
-            "Honor Satuan": formatCurrency(row.honor_satuan ?? 0), // Format currency
-            "Honor Kegiatan": formatCurrency(row.total_honor ?? 0), // Format currency
-            "Kode Kegiatan": row.kode,
-        }));
+        // Create a new workbook and worksheet
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Mitra Data');
 
-        // Add the total honor as a separate row or at the end of the CSV data
-        formattedData.push({
-            "Nama Kegiatan": "Total Honor",
-            "Periode Waktu": "",
-            "Target Volume Pekerjaan": 0,
-            "Satuan Honor": "",
-            "Honor Satuan": "", // No currency needed here
-            "Honor Kegiatan": formatCurrency(totalHonor), // Format total honor as currency
-            "Kode Kegiatan": "",
+        // Add column headers
+        worksheet.columns = [
+            { header: 'Nama Kegiatan', key: 'nama_kegiatan', width: 30 },
+            { header: 'Periode Waktu', key: 'periode_waktu', width: 30 },
+            { header: 'Target Volume Pekerjaan', key: 'target_volume_pekerjaan', width: 20 },
+            { header: 'Satuan Honor', key: 'satuan_honor', width: 15 },
+            { header: 'Honor Satuan', key: 'honor_satuan', width: 20 },
+            { header: 'Honor Kegiatan', key: 'honor_kegiatan', width: 20 },
+            { header: 'Kode Kegiatan', key: 'kode', width: 15 },
+        ];
+
+        // Add data rows
+        data.forEach((row: ExportData) => {
+            worksheet.addRow({
+                nama_kegiatan: row.nama_kegiatan,
+                periode_waktu: `${formatDate(row.tanggal_mulai)} s.d ${formatDate(row.tanggal_berakhir)}`,
+                target_volume_pekerjaan: row.target_volume_pekerjaan ?? 0,
+                satuan_honor: row.satuan_honor,
+                honor_satuan: formatCurrency(row.honor_satuan ?? 0),
+                honor_kegiatan: formatCurrency(row.total_honor ?? 0),
+                kode: row.kode,
+            });
         });
 
-        // Convert the data to CSV format
-        const csvData = parse(formattedData);
+        // Add total honor row
+        worksheet.addRow({
+            nama_kegiatan: 'Total Honor',
+            periode_waktu: '',
+            target_volume_pekerjaan: 0,
+            satuan_honor: '',
+            honor_satuan: '',
+            honor_kegiatan: formatCurrency(totalHonor),
+            kode: '',
+        });
 
-        // Create and return the response
-        return new NextResponse(csvData, {
+        // Write to a buffer
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        // Create and return the response with Excel file
+        return new NextResponse(buffer, {
             headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': 'attachment; filename=mitra_export.csv',
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition': `attachment; filename=mitra_export.xlsx`,
             },
         });
     } catch (error) {

@@ -6,7 +6,6 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { EyeIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { ClipLoader } from "react-spinners"; // Import a spinner component
 
 // Define interfaces for data
 interface BreadcrumbItem {
@@ -19,7 +18,7 @@ interface KegiatanData {
     nama_kegiatan: string;
     kode: string;
     penanggung_jawab: string;
-    jenis_kegiatan: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_kegiatan: "Lapangan" | "Pengolahan"; // Updated ENUM
 }
 
 export default function DaftarKegiatanPage() {
@@ -59,7 +58,6 @@ export default function DaftarKegiatanPage() {
                     setAvailableMonths(months);
                     setAvailableYears(years);
 
-                    // Set the smallest month and year as the default filter
                     setFilterMonth(Math.min(...months).toString());
                     setFilterYear(Math.min(...years).toString());
                 } else {
@@ -121,15 +119,13 @@ export default function DaftarKegiatanPage() {
         const items = [];
         const maxPagesToShow = 5;
 
-        // Show the first page and ellipses if necessary
         if (currentPage > maxPagesToShow) {
             items.push(
                 <button
                     key={1}
                     onClick={() => setCurrentPage(1)}
-                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${
-                        currentPage === 1 ? "text-primary-600 bg-primary-50 border-primary-300" : ""
-                    }`}
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${currentPage === 1 ? "text-primary-600 bg-primary-50 border-primary-300" : ""
+                        }`}
                 >
                     1
                 </button>
@@ -137,7 +133,6 @@ export default function DaftarKegiatanPage() {
             items.push(<span key="start-dots" className="px-2">...</span>);
         }
 
-        // Calculate start and end page numbers
         const startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
         const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
 
@@ -146,27 +141,24 @@ export default function DaftarKegiatanPage() {
                 <button
                     key={i}
                     onClick={() => setCurrentPage(i)}
-                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${
-                        currentPage === i
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${currentPage === i
                             ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
                             : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
-                    }`}
+                        }`}
                 >
                     {i}
                 </button>
             );
         }
 
-        // Show the last page and ellipses if necessary
         if (currentPage < totalPages - maxPagesToShow + 1) {
             items.push(<span key="end-dots" className="px-2">...</span>);
             items.push(
                 <button
                     key={totalPages}
                     onClick={() => setCurrentPage(totalPages)}
-                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${
-                        currentPage === totalPages ? "text-primary-600 bg-primary-50 border-primary-300" : ""
-                    }`}
+                    className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${currentPage === totalPages ? "text-primary-600 bg-primary-50 border-primary-300" : ""
+                        }`}
                 >
                     {totalPages}
                 </button>
@@ -225,8 +217,7 @@ export default function DaftarKegiatanPage() {
                         onChange={(e) => setFilterJenisKegiatan(e.target.value)}
                     >
                         <option value="">Jenis Kegiatan</option>
-                        <option value="Pendataan">Pendataan</option>
-                        <option value="Pemeriksaan">Pemeriksaan</option>
+                        <option value="Lapangan">Lapangan</option>
                         <option value="Pengolahan">Pengolahan</option>
                     </select>
                 </div>
@@ -261,11 +252,9 @@ export default function DaftarKegiatanPage() {
                                                 <td className="px-6 py-4">{kegiatan.penanggung_jawab}</td>
                                                 <td className="px-6 py-4">
                                                     <span
-                                                        className={`px-2 py-1 text-xs font-medium rounded-full ${kegiatan.jenis_kegiatan === "Pendataan"
+                                                        className={`px-2 py-1 text-xs font-medium rounded-full ${kegiatan.jenis_kegiatan === "Lapangan"
                                                             ? "text-blue-800 bg-blue-100"
-                                                            : kegiatan.jenis_kegiatan === "Pemeriksaan"
-                                                                ? "text-green-800 bg-green-100"
-                                                                : "text-yellow-800 bg-yellow-100"
+                                                            : "text-yellow-800 bg-yellow-100"
                                                             }`}
                                                     >
                                                         {kegiatan.jenis_kegiatan}

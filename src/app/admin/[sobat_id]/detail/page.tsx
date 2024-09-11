@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
+import Swal from "sweetalert2";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -54,9 +55,9 @@ export default function MitraDetailPage() {
     const [loadingTotalHonor, setLoadingTotalHonor] = useState<boolean>(true); // Loading state for total honor
     const [loadingDates, setLoadingDates] = useState<boolean>(true); // Loading state for fetching available dates
     const [searchTerm, setSearchTerm] = useState<string>("");
-    
+
     // Initialize filters as empty strings to represent "all months" and "all years"
-    const [filterMonth, setFilterMonth] = useState<string>(""); 
+    const [filterMonth, setFilterMonth] = useState<string>("");
     const [filterYear, setFilterYear] = useState<string>("");
 
     const [totalHonor, setTotalHonor] = useState<number | null>(null); // State for total honor
@@ -71,7 +72,28 @@ export default function MitraDetailPage() {
     ];
 
     // Export function to fetch CSV data from the API
+    // Export function to fetch Excel data from the API
     const handleExport = async () => {
+        if (!filterMonth || !filterYear) {
+            // Show warning if filters are not selected
+            Swal.fire({
+                icon: "warning",
+                title: "Pilih Filter",
+                text: "Harap pilih bulan dan tahun sebelum melakukan ekspor data.",
+                confirmButtonText: "OK",
+            });
+            return;
+        }
+
+        // Get the name of the Mitra for the file name
+        const mitraName = mitraDetail?.nama || "Mitra"; // Default to "Mitra" if the name is unavailable
+
+        // Format the month name
+        const monthName = new Date(0, parseInt(filterMonth) - 1).toLocaleString("id-ID", { month: "long" });
+
+        // Construct the file name dynamically
+        const fileName = `${mitraName.replace(/\s+/g, "_")}_${monthName}_${filterYear}.xlsx`;
+
         try {
             const response = await fetch(
                 `/api/export-mitra?sobat_id=${validSobatId}&month=${filterMonth}&year=${filterYear}`
@@ -84,7 +106,7 @@ export default function MitraDetailPage() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "mitra_export.csv";
+            a.download = fileName; // Set the dynamic file name here
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -93,6 +115,7 @@ export default function MitraDetailPage() {
             console.error("Error exporting data:", error);
         }
     };
+
 
     // Fetch available months and years
     const fetchAvailableDates = useCallback(async () => {
@@ -403,8 +426,8 @@ export default function MitraDetailPage() {
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
                                             className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage === 1
-                                                    ? "cursor-not-allowed opacity-50"
-                                                    : "hover:bg-gray-100 hover:text-gray-700"
+                                                ? "cursor-not-allowed opacity-50"
+                                                : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-l-md`}
                                         >
                                             <span className="sr-only">Previous</span>
@@ -416,8 +439,8 @@ export default function MitraDetailPage() {
                                             key={currentPage}
                                             onClick={() => setCurrentPage(currentPage)}
                                             className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${currentPage
-                                                    ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
-                                                    : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
+                                                ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
+                                                : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
                                                 }`}
                                         >
                                             {currentPage}
@@ -428,8 +451,8 @@ export default function MitraDetailPage() {
                                             onClick={handleNextPage}
                                             disabled={currentPage * itemsPerPage >= kegiatanList.length}
                                             className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= kegiatanList.length
-                                                    ? "cursor-not-allowed opacity-50"
-                                                    : "hover:bg-gray-100 hover:text-gray-700"
+                                                ? "cursor-not-allowed opacity-50"
+                                                : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-r-md`}
                                         >
                                             <span className="sr-only">Next</span>
