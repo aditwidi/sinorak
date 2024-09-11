@@ -1,4 +1,3 @@
-// src/app/api/update-kegiatan-mitra/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/db';
 import { kegiatan_mitra } from '@/lib/db/schema';
@@ -9,7 +8,8 @@ interface MitraEntry {
     target_volume_pekerjaan: number;
     total_honor: number;
     jenis_petugas?: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan";
-    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor"; // Add status_mitra here
+    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor";
+    is_new?: boolean; // Flag to determine if this is a new entry
 }
 
 export async function PUT(req: NextRequest) {
@@ -37,33 +37,37 @@ export async function PUT(req: NextRequest) {
             );
         }
 
-        // Validate each mitra entry
-        if (
-            !mitra_entries.every(
-                (entry) =>
-                    entry.sobat_id &&
-                    typeof entry.target_volume_pekerjaan === 'number' &&
-                    typeof entry.total_honor === 'number' &&
-                    (!entry.status_mitra ||
-                        ["PPL", "PML", "Operator", "Supervisor"].includes(entry.status_mitra)) // Validate status_mitra
-            )
-        ) {
-            console.error('Validation Error: Invalid mitra entry data');
+        // Improved validation for each mitra entry
+        const invalidEntries = mitra_entries.filter(
+            (entry) =>
+                !entry.sobat_id || // Must have a valid sobat_id
+                typeof entry.target_volume_pekerjaan !== 'number' || // Must be a number
+                (typeof entry.total_honor !== 'number' || isNaN(entry.total_honor)) || // Must be a number and not NaN
+                (entry.status_mitra && !["PPL", "PML", "Operator", "Supervisor"].includes(entry.status_mitra)) // If status_mitra exists, must be valid
+        );
+
+        // Check if there are any invalid entries
+        if (invalidEntries.length > 0) {
+            console.error('Validation Error: Invalid mitra entry data', invalidEntries);
             return NextResponse.json(
-                { error: 'Invalid mitra entry data' },
+                { error: 'Invalid mitra entry data', details: invalidEntries },
                 { status: 400 }
             );
         }
 
-        // Create an array of SQL operations for batch execution
-        const batchUpdates = mitra_entries.map((entry) =>
+        // Separate new entries from existing ones
+        const newEntries = mitra_entries.filter((entry) => entry.is_new);
+        const existingEntries = mitra_entries.filter((entry) => !entry.is_new);
+
+        // Create an array of SQL operations for updating existing entries
+        const batchUpdates = existingEntries.map((entry) =>
             db
                 .update(kegiatan_mitra)
                 .set({
                     honor_satuan,
                     target_volume_pekerjaan: entry.target_volume_pekerjaan,
                     total_honor: entry.total_honor,
-                    status_mitra: entry.status_mitra, // Include status_mitra in the update
+                    status_mitra: entry.status_mitra,
                 })
                 .where(
                     and(
@@ -73,8 +77,28 @@ export async function PUT(req: NextRequest) {
                 )
         );
 
-        // Execute the batch operation using the correct method
-        await db.batch(batchUpdates as [typeof batchUpdates[number]]);
+        // Execute the batch update operation
+        if (batchUpdates.length > 0) {
+            await db.batch(batchUpdates as [typeof batchUpdates[number]]);
+        }
+
+        // Calculate total honor for new entries
+        const newInserts = newEntries.map((entry) => {
+            const calculatedTotalHonor = honor_satuan * entry.target_volume_pekerjaan; // Calculate total_honor
+            return db.insert(kegiatan_mitra).values({
+                kegiatan_id,
+                sobat_id: entry.sobat_id,
+                honor_satuan,
+                target_volume_pekerjaan: entry.target_volume_pekerjaan,
+                total_honor: calculatedTotalHonor, // Use the calculated total_honor
+                status_mitra: entry.status_mitra,
+            });
+        });
+
+        // Execute the batch insert operation
+        if (newInserts.length > 0) {
+            await db.batch(newInserts as [typeof newInserts[number]]);
+        }
 
         return NextResponse.json(
             { message: 'Kegiatan mitra updated successfully' },

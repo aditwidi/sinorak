@@ -57,9 +57,7 @@ function EditKegiatanPage() {
 
     const [namaKegiatan, setNamaKegiatan] = useState("");
     const [kode, setKode] = useState("");
-    const [jenisKegiatan, setJenisKegiatan] = useState<"Lapangan" | "Pengolahan">(
-        "Lapangan"
-    );
+    const [jenisKegiatan, setJenisKegiatan] = useState<"Lapangan" | "Pengolahan">("Lapangan");
     const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null);
     const [tanggalBerakhir, setTanggalBerakhir] = useState<Date | null>(null);
     const [penanggungJawab, setPenanggungJawab] = useState<string>("");
@@ -79,6 +77,8 @@ function EditKegiatanPage() {
     const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([
         { sobat_id: "", target_volume_pekerjaan: 0 },
     ]);
+    const [mitraPenggantiEntries, setMitraPenggantiEntries] = useState<MitraEntry[]>([]);
+    const [showMitraPengganti, setShowMitraPengganti] = useState(false);
     const [honorSatuan, setHonorSatuan] = useState<string>("");
     const [month, setMonth] = useState<number | null>(null);
     const [year, setYear] = useState<number | null>(null);
@@ -128,7 +128,7 @@ function EditKegiatanPage() {
                             target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
                             total_honor: entry.total_honor,
                             jenis_petugas: entry.jenis_petugas,
-                            status_mitra: entry.status_mitra, // Fetch status_mitra from data
+                            status_mitra: entry.status_mitra,
                         })
                     );
 
@@ -215,6 +215,106 @@ function EditKegiatanPage() {
         });
     };
 
+    const handleMitraPenggantiVolumeChange = (index: number, volume: string) => {
+        const numericVolume = parseInt(volume, 10);
+
+        if (isNaN(numericVolume) || numericVolume < 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Target volume tidak boleh negatif.",
+            });
+            return;
+        }
+
+        setMitraPenggantiEntries((prevEntries) => {
+            const newEntries = [...prevEntries];
+            newEntries[index].target_volume_pekerjaan = numericVolume;
+            return newEntries;
+        });
+    };
+
+    const handleMitraChange = async (index: number, sobat_id: string) => {
+        const newMitraEntries = [...mitraEntries];
+        const selectedMitra = mitras.find((mitra) => mitra.sobat_id === sobat_id);
+
+        if (!selectedMitra) {
+            console.error("Mitra not found for sobat_id:", sobat_id);
+            return;
+        }
+
+        newMitraEntries[index].sobat_id = sobat_id;
+        newMitraEntries[index].jenis_petugas = selectedMitra.jenis_petugas;
+
+        setMitraEntries(newMitraEntries);
+
+        if (month && year && sobat_id) {
+            try {
+                const honorResponse = await fetch(
+                    `/api/get-mitra-honor?sobat_id=${sobat_id}&month=${month}&year=${year}`
+                );
+                const honorData = await honorResponse.json();
+
+                if (honorResponse.ok && honorData.total_honor !== undefined) {
+                    newMitraEntries[index].total_honor = honorData.total_honor;
+                } else {
+                    newMitraEntries[index].total_honor = 0; // Sets total_honor to 0 if not fetched properly
+                }
+
+                setMitraEntries(newMitraEntries);
+            } catch (error) {
+                console.error("Error fetching honor for mitra:", error);
+            }
+        }
+
+        checkHonorLimits();
+    };
+
+    const handleMitraPenggantiChange = async (index: number, sobat_id: string) => {
+        const newMitraPenggantiEntries = [...mitraPenggantiEntries];
+        const selectedMitra = mitras.find((mitra) => mitra.sobat_id === sobat_id);
+
+        if (!selectedMitra) {
+            console.error("Mitra not found for sobat_id:", sobat_id);
+            return;
+        }
+
+        newMitraPenggantiEntries[index].sobat_id = sobat_id;
+        newMitraPenggantiEntries[index].jenis_petugas = selectedMitra.jenis_petugas;
+
+        setMitraPenggantiEntries(newMitraPenggantiEntries);
+
+        // Fetch honor data for the selected Mitra Pengganti
+        if (month && year && sobat_id) {
+            try {
+                const honorResponse = await fetch(
+                    `/api/get-mitra-honor?sobat_id=${sobat_id}&month=${month}&year=${year}`
+                );
+                const honorData = await honorResponse.json();
+
+                if (honorResponse.ok && honorData.total_honor !== undefined) {
+                    newMitraPenggantiEntries[index].total_honor = honorData.total_honor;
+                } else {
+                    newMitraPenggantiEntries[index].total_honor = 0; // Default to 0 if no honor data found
+                }
+
+                setMitraPenggantiEntries(newMitraPenggantiEntries);
+            } catch (error) {
+                console.error("Error fetching honor for mitra pengganti:", error);
+            }
+        }
+    };
+
+    const addMitraPenggantiEntry = () => {
+        setShowMitraPengganti(true);
+        setMitraPenggantiEntries([...mitraPenggantiEntries, { sobat_id: "", target_volume_pekerjaan: 0 }]);
+    };
+
+    const removeMitraPenggantiEntry = (index: number) => {
+        const newEntries = mitraPenggantiEntries.filter((_, i) => i !== index);
+        setMitraPenggantiEntries(newEntries);
+    };
+
     const handleNamaKegiatanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (/^[a-zA-Z0-9./\s\-()]*$/.test(value)) {
@@ -273,6 +373,21 @@ function EditKegiatanPage() {
         e.preventDefault();
         setLoading(true);
 
+        // Check if all Mitra and Mitra Pengganti entries have status_mitra selected
+        const missingStatusMitra = mitraEntries.some((entry) => !entry.status_mitra) ||
+            mitraPenggantiEntries.some((entry) => !entry.status_mitra);
+
+        if (missingStatusMitra) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Status Mitra harus diisi untuk semua mitra sebelum melanjutkan.",
+            });
+            setLoading(false);
+            return;
+        }
+
+        // Check for honor limits and validate data
         const exceedsLimit = mitraEntries.some((entry) => {
             const honorLimit = honorLimits.find(
                 (limit) => limit.jenis_petugas === entry.jenis_petugas
@@ -301,14 +416,12 @@ function EditKegiatanPage() {
         }
 
         try {
-            const deductHonorResponse = await fetch(
-                "/api/update-honor-mitra-monthly",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ kegiatan_id }),
-                }
-            );
+            // Make necessary API calls
+            const deductHonorResponse = await fetch("/api/update-honor-mitra-monthly", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ kegiatan_id }),
+            });
 
             if (!deductHonorResponse.ok) {
                 const errorData = await deductHonorResponse.json();
@@ -325,12 +438,8 @@ function EditKegiatanPage() {
                     nama_kegiatan: namaKegiatan,
                     kode,
                     jenis_kegiatan: jenisKegiatan,
-                    tanggal_mulai: tanggalMulai
-                        ? tanggalMulai.toISOString().split("T")[0]
-                        : "",
-                    tanggal_berakhir: tanggalBerakhir
-                        ? tanggalBerakhir.toISOString().split("T")[0]
-                        : "",
+                    tanggal_mulai: tanggalMulai ? tanggalMulai.toISOString().split("T")[0] : "",
+                    tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                     penanggung_jawab: penanggungJawab,
                     satuan_honor: satuanHonor,
                 }),
@@ -338,43 +447,46 @@ function EditKegiatanPage() {
 
             if (!updateKegiatanResponse.ok) {
                 const errorData = await updateKegiatanResponse.json();
-                Swal.fire(
-                    "Error",
-                    errorData.error || "Failed to update kegiatan",
-                    "error"
-                );
+                Swal.fire("Error", errorData.error || "Failed to update kegiatan", "error");
                 setLoading(false);
                 return;
             }
 
-            const updateKegiatanMitraResponse = await fetch(
-                "/api/update-kegiatan-mitra",
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        kegiatan_id,
-                        mitra_entries: mitraEntries.map((entry) => ({
-                            ...entry,
-                            target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
-                        })),
-                        honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
-                    }),
-                }
-            );
+            // Combine mitra entries and mark new mitra pengganti entries
+            const combinedEntries = [
+                ...mitraEntries.map((entry) => ({
+                    ...entry,
+                    target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
+                    total_honor: entry.total_honor ?? 0, // Ensure total_honor is a valid number
+                    is_new: false, // Existing entries are not new
+                })),
+                ...mitraPenggantiEntries.map((entry) => ({
+                    ...entry,
+                    target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
+                    total_honor: entry.total_honor ?? 0, // Ensure total_honor is a valid number
+                    is_new: true, // Mark new entries
+                }))
+            ];
+
+            const updateKegiatanMitraResponse = await fetch("/api/update-kegiatan-mitra", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    kegiatan_id,
+                    mitra_entries: combinedEntries,
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
+                }),
+            });
 
             if (!updateKegiatanMitraResponse.ok) {
                 const errorData = await updateKegiatanMitraResponse.json();
-                Swal.fire(
-                    "Error",
-                    errorData.error || "Failed to update kegiatan_mitra",
-                    "error"
-                );
+                Swal.fire("Error", errorData.error || "Failed to update kegiatan_mitra", "error");
                 setLoading(false);
                 return;
             }
 
-            for (const entry of mitraEntries) {
+            // Update honor for each mitra
+            for (const entry of combinedEntries) {
                 const updateTotalHonorResponse = await fetch("/api/update-honor", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -390,8 +502,7 @@ function EditKegiatanPage() {
                     const errorData = await updateTotalHonorResponse.json();
                     Swal.fire(
                         "Error",
-                        errorData.error ||
-                        "Failed to update total_honor for sobat_id " + entry.sobat_id,
+                        errorData.error || "Failed to update total_honor for sobat_id " + entry.sobat_id,
                         "error"
                     );
                     setLoading(false);
@@ -403,14 +514,13 @@ function EditKegiatanPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    mitra_entries: mitraEntries.map((entry) => ({
+                    kegiatan_id,
+                    mitra_entries: combinedEntries.map((entry) => ({
                         ...entry,
                         target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
                     })),
                     honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
-                    tanggal_berakhir: tanggalBerakhir
-                        ? tanggalBerakhir.toISOString().split("T")[0]
-                        : "",
+                    tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                 }),
             });
 
@@ -425,50 +535,10 @@ function EditKegiatanPage() {
             router.push("/admin/daftar-kegiatan");
         } catch (error) {
             console.error("Error:", error);
-            Swal.fire(
-                "Error",
-                "An unexpected error occurred while updating.",
-                "error"
-            );
+            Swal.fire("Error", "An unexpected error occurred while updating.", "error");
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleMitraChange = async (index: number, sobat_id: string) => {
-        const newMitraEntries = [...mitraEntries];
-        const selectedMitra = mitras.find((mitra) => mitra.sobat_id === sobat_id);
-
-        if (!selectedMitra) {
-            console.error("Mitra not found for sobat_id:", sobat_id);
-            return;
-        }
-
-        newMitraEntries[index].sobat_id = sobat_id;
-        newMitraEntries[index].jenis_petugas = selectedMitra.jenis_petugas;
-
-        setMitraEntries(newMitraEntries);
-
-        if (month && year && sobat_id) {
-            try {
-                const honorResponse = await fetch(
-                    `/api/get-mitra-honor?sobat_id=${sobat_id}&month=${month}&year=${year}`
-                );
-                const honorData = await honorResponse.json();
-
-                if (honorResponse.ok && honorData.total_honor !== undefined) {
-                    newMitraEntries[index].total_honor = honorData.total_honor;
-                } else {
-                    newMitraEntries[index].total_honor = 0;
-                }
-
-                setMitraEntries(newMitraEntries);
-            } catch (error) {
-                console.error("Error fetching honor for mitra:", error);
-            }
-        }
-
-        checkHonorLimits();
     };
 
     const getStatusOptions = () => {
@@ -489,6 +559,7 @@ function EditKegiatanPage() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 onSubmit={handleSubmit}
             >
+                {/* Existing input fields */}
                 <div>
                     <label
                         htmlFor="nama_kegiatan"
@@ -531,7 +602,6 @@ function EditKegiatanPage() {
                         />
                     )}
                 </div>
-
                 <div>
                     <label
                         htmlFor="penanggung_jawab"
@@ -576,7 +646,6 @@ function EditKegiatanPage() {
                         </select>
                     )}
                 </div>
-
                 <div>
                     <label
                         htmlFor="tanggal_mulai"
@@ -621,7 +690,6 @@ function EditKegiatanPage() {
                         />
                     )}
                 </div>
-
                 <div>
                     <label
                         htmlFor="honor_satuan"
@@ -715,7 +783,6 @@ function EditKegiatanPage() {
                                 className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Target Volume"
                             />
-                            {/* Added status_mitra field */}
                             <select
                                 value={entry.status_mitra || ""}
                                 onChange={(e) => {
@@ -738,6 +805,103 @@ function EditKegiatanPage() {
                             </select>
                         </div>
                     ))}
+                </div>
+
+                {/* Mitra Pengganti Section */}
+                <div className="md:col-span-2">
+                    <h2 className="text-xl font-semibold mb-4">Mitra Pengganti</h2>
+                    {!showMitraPengganti ? (
+                        <button
+                            type="button"
+                            onClick={addMitraPenggantiEntry}
+                            className="mt-2 mb-4 bg-green-500 text-white py-1 px-3 rounded-md"
+                        >
+                            Tambah Mitra Pengganti
+                        </button>
+                    ) : (
+                        <>
+                            {mitraPenggantiEntries.map((entry, index) => (
+                                <div key={index} className="flex items-center space-x-4 mb-4">
+                                    <Select<Mitra>
+                                        options={mitras.filter(
+                                            (mitra) =>
+                                                !mitraPenggantiEntries.map((e) => e.sobat_id).includes(mitra.sobat_id) &&
+                                                !mitraEntries.map((e) => e.sobat_id).includes(mitra.sobat_id) // Filter out already selected in Mitra dan Target Volume
+                                        )}
+                                        getOptionLabel={(option) => `${option.sobat_id} - ${option.nama}`}
+                                        getOptionValue={(option) => option.sobat_id}
+                                        value={mitras.find((option) => option.sobat_id === entry.sobat_id) || null}
+                                        onChange={(selectedOption) =>
+                                            handleMitraPenggantiChange(index, selectedOption?.sobat_id || "")
+                                        }
+                                        placeholder="Pilih Mitra Pengganti"
+                                        isClearable
+                                        classNamePrefix="custom-select"
+                                        className="w-1/2"
+                                        menuPortalTarget={document.body}
+                                        menuPlacement="auto"
+                                        styles={{
+                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                            menu: (provided) => ({
+                                                ...provided,
+                                                backgroundColor: "white",
+                                                color: "black",
+                                            }),
+                                            option: (provided, state) => ({
+                                                ...provided,
+                                                backgroundColor: state.isSelected ? "#60a5fa" : state.isFocused ? "#e2e8f0" : "white",
+                                                color: state.isSelected ? "white" : "black",
+                                                cursor: "pointer",
+                                            }),
+                                        }}
+                                    />
+                                    <input
+                                        type="number"
+                                        value={entry.target_volume_pekerjaan === "" ? "" : entry.target_volume_pekerjaan.toString()}
+                                        onChange={(e) => handleMitraPenggantiVolumeChange(index, e.target.value)}
+                                        className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Target Volume"
+                                    />
+                                    <select
+                                        value={entry.status_mitra || ""}
+                                        onChange={(e) => {
+                                            const newEntries = [...mitraPenggantiEntries];
+                                            newEntries[index].status_mitra = e.target.value as
+                                                | "PPL"
+                                                | "PML"
+                                                | "Operator"
+                                                | "Supervisor";
+                                            setMitraPenggantiEntries(newEntries);
+                                        }}
+                                        className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Status Mitra</option>
+                                        {getStatusOptions().map((status) => (
+                                            <option key={status} value={status}>
+                                                {status}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {mitraPenggantiEntries.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMitraPenggantiEntry(index)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            Hapus
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={addMitraPenggantiEntry}
+                                className="mt-2 bg-green-500 text-white py-1 px-3 rounded-md"
+                            >
+                                Tambah Mitra Pengganti Lagi
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 {/* Submit Button */}

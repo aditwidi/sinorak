@@ -30,12 +30,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "No entries found for this kegiatan_id" }, { status: 404 });
         }
 
-        // Extract unique sobat_ids and the corresponding total_honor to be deducted
-        const sobatIds = kegiatanMitraEntries
+        // Combine both existing mitra and mitra pengganti entries
+        const allMitraEntries = [...kegiatanMitraEntries];
+
+        // Extract unique sobat_ids and corresponding total_honor to be deducted
+        const sobatIds = allMitraEntries
             .map(entry => entry.sobat_id)
             .filter((id): id is string => id !== null); // Ensure sobat_ids are not null
 
-        const honorDeductions = kegiatanMitraEntries.reduce((acc, entry) => {
+        const honorDeductions = allMitraEntries.reduce((acc, entry) => {
             if (!entry.sobat_id || !entry.tanggal_berakhir) return acc;
 
             const { month, year } = extractMonthAndYear(entry.tanggal_berakhir);
@@ -64,6 +67,7 @@ export async function POST(req: NextRequest) {
             )
             .all();
 
+        // Prepare the records to be inserted or updated
         const updates = existingHonors.map(honor => {
             const key = `${honor.sobat_id}-${honor.month}-${honor.year}`;
             const deduction = honorDeductions.get(key);
@@ -74,24 +78,35 @@ export async function POST(req: NextRequest) {
                 year: honor.year,
                 total_honor: deduction, // Only the amount to be deducted
             };
-        }).filter((update): update is NonNullable<typeof update> => update !== null); // Properly type-guard against null
+        }).filter((update): update is NonNullable<typeof update> => update !== null);
 
-        // Check if updates array is empty
-        if (updates.length === 0) {
-            return NextResponse.json({ message: "No updates required" }, { status: 200 });
-        }
+        // Identify new records to be inserted
+        const existingKeys = new Set(existingHonors.map(honor => `${honor.sobat_id}-${honor.month}-${honor.year}`));
+        const newInserts = Array.from(honorDeductions.entries())
+            .filter(([key]) => !existingKeys.has(key))
+            .map(([key, total_honor]) => {
+                const [sobat_id, month, year] = key.split("-");
+                return {
+                    sobat_id,
+                    month: parseInt(month),
+                    year: parseInt(year),
+                    total_honor,
+                };
+            });
 
         // Perform upsert operation: Insert new records or update existing ones
-        await db
-            .insert(mitra_honor_monthly)
-            .values(updates)
-            .onConflictDoUpdate({
-                target: [mitra_honor_monthly.sobat_id, mitra_honor_monthly.month, mitra_honor_monthly.year],
-                set: {
-                    total_honor: sql`${mitra_honor_monthly.total_honor} - EXCLUDED.total_honor`,
-                },
-            })
-            .run();
+        if (newInserts.length > 0 || updates.length > 0) {
+            await db
+                .insert(mitra_honor_monthly)
+                .values([...newInserts, ...updates])
+                .onConflictDoUpdate({
+                    target: [mitra_honor_monthly.sobat_id, mitra_honor_monthly.month, mitra_honor_monthly.year],
+                    set: {
+                        total_honor: sql`${mitra_honor_monthly.total_honor} - EXCLUDED.total_honor`,
+                    },
+                })
+                .run();
+        }
 
         return NextResponse.json({ message: "Honor mitra monthly updated successfully" }, { status: 200 });
     } catch (error) {
