@@ -6,6 +6,8 @@ import Breadcrumb from "@/components/Breadcrumb";
 import Swal from "sweetalert2";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import Link from "next/link";
+
 
 interface BreadcrumbItem {
     label: string;
@@ -23,6 +25,7 @@ interface MitraDetail {
 }
 
 interface Kegiatan {
+    kegiatan_id:number;
     nama_kegiatan: string;
     kode: string;
     penanggung_jawab: string;
@@ -67,7 +70,7 @@ export default function MitraDetailPage() {
     const [availableYears, setAvailableYears] = useState<number[]>([]); // Available years
 
     const breadcrumbItems: BreadcrumbItem[] = [
-        { label: "Mitra Statistik", href: "/admin/daftar-mitra" },
+        { label: "Mitra Statistik", href: "/user/daftar-mitra" },
         { label: "Detail Mitra" },
     ];
 
@@ -369,25 +372,21 @@ export default function MitraDetailPage() {
                                             </tr>
                                         ) : (
                                             kegiatanList.map((kegiatan, index) => (
-                                                <tr
-                                                    key={index}
-                                                    className="bg-white border-b hover:bg-gray-50"
-                                                >
+                                                <tr key={index} className="bg-white border-b hover:bg-gray-50">
                                                     <td className="px-2 py-4 font-medium text-gray-900">
-                                                        {kegiatan.nama_kegiatan}
+                                                        {/* Wrap nama_kegiatan in a Link */}
+                                                        <Link
+                                                            href={`/user/kegiatan/${kegiatan.kegiatan_id}/detail-kegiatan`}
+                                                            className="text-black hover:text-blue-700"
+                                                        >
+                                                            {kegiatan.nama_kegiatan}
+                                                        </Link>
                                                     </td>
                                                     <td className="px-2 py-4">{kegiatan.kode}</td>
+                                                    <td className="px-2 py-4">{kegiatan.penanggung_jawab}</td>
+                                                    <td className="px-2 py-4">Rp {kegiatan.honor.toLocaleString()}</td>
                                                     <td className="px-2 py-4">
-                                                        {kegiatan.penanggung_jawab}
-                                                    </td>
-                                                    <td className="px-2 py-4">
-                                                        Rp {kegiatan.honor.toLocaleString()}
-                                                    </td>
-                                                    <td className="px-2 py-4">
-                                                        {new Date(
-                                                            0,
-                                                            kegiatan.bulan - 1
-                                                        ).toLocaleString("id-ID", { month: "long" })}
+                                                        {new Date(0, kegiatan.bulan - 1).toLocaleString("id-ID", { month: "long" })}
                                                     </td>
                                                     <td className="px-2 py-4">{kegiatan.tahun}</td>
                                                 </tr>

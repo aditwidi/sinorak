@@ -30,8 +30,8 @@ interface Activity {
   jenis_kegiatan: string;
 }
 
-// AdminPage component
-export default function AdminPage() {
+// UserPage component
+export default function UserPage() {
   const { data: session, status } = useSession();
   const [activities, setActivities] = useState<Activity[]>([]); // State for activities data
   const [loading, setLoading] = useState<boolean>(true); // Loading state for fetching activities

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
@@ -50,9 +51,7 @@ export default function DetailKegiatanPage() {
     // Ensure kegiatan_id is a string
     const validKegiatanId = Array.isArray(kegiatan_id) ? kegiatan_id[0] : kegiatan_id;
 
-    const [kegiatanDetail, setKegiatanDetail] = useState<KegiatanDetail | null>(
-        null
-    );
+    const [kegiatanDetail, setKegiatanDetail] = useState<KegiatanDetail | null>(null);
     const [pesertaList, setPesertaList] = useState<Peserta[]>([]);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(true);
     const [loadingPeserta, setLoadingPeserta] = useState<boolean>(true);
@@ -63,7 +62,7 @@ export default function DetailKegiatanPage() {
 
     // Breadcrumb items
     const breadcrumbItems = [
-        { label: "Kegiatan Statistik", href: "/admin/daftar-kegiatan" },
+        { label: "Kegiatan Statistik", href: "/user/daftar-kegiatan" },
         { label: "Detail Kegiatan" },
     ];
 
@@ -205,21 +204,11 @@ export default function DetailKegiatanPage() {
                                 <table className="min-w-full text-sm text-left text-gray-500">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                         <tr>
-                                            <th scope="col" className="px-2 py-2">
-                                                SOBAT ID
-                                            </th>
-                                            <th scope="col" className="px-2 py-2">
-                                                Nama
-                                            </th>
-                                            <th scope="col" className="px-2 py-2">
-                                                Target
-                                            </th>
-                                            <th scope="col" className="px-2 py-2">
-                                                Honor
-                                            </th>
-                                            <th scope="col" className="px-2 py-2">
-                                                Status Mitra
-                                            </th>
+                                            <th scope="col" className="px-2 py-2">SOBAT ID</th>
+                                            <th scope="col" className="px-2 py-2">Nama</th>
+                                            <th scope="col" className="px-2 py-2">Target</th>
+                                            <th scope="col" className="px-2 py-2">Honor</th>
+                                            <th scope="col" className="px-2 py-2">Status Mitra</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -231,18 +220,21 @@ export default function DetailKegiatanPage() {
                                             </tr>
                                         ) : (
                                             paginatedPesertaList.map((peserta, index) => (
-                                                <tr
-                                                    key={index}
-                                                    className="bg-white border-b hover:bg-gray-50"
-                                                >
+                                                <tr key={index} className="bg-white border-b hover:bg-gray-50">
                                                     <td className="px-2 py-4 font-medium text-gray-900">
                                                         {peserta.sobat_id}
                                                     </td>
-                                                    <td className="px-2 py-4">{peserta.nama}</td>
-                                                    <td className="px-2 py-4">{peserta.target}</td>
                                                     <td className="px-2 py-4">
-                                                        Rp {peserta.honor.toLocaleString()}
+                                                        {/* Make nama clickable */}
+                                                        <Link
+                                                            href={`/user/${peserta.sobat_id}/detail`}
+                                                            className="text-gray-800 hover:text-blue-700 font-semibold"
+                                                        >
+                                                            {peserta.nama}
+                                                        </Link>
                                                     </td>
+                                                    <td className="px-2 py-4">{peserta.target}</td>
+                                                    <td className="px-2 py-4">Rp {peserta.honor.toLocaleString()}</td>
                                                     <td className="px-2 py-4">{peserta.status_mitra}</td>
                                                 </tr>
                                             ))
@@ -280,8 +272,8 @@ export default function DetailKegiatanPage() {
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
                                             className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage === 1
-                                                    ? "cursor-not-allowed opacity-50"
-                                                    : "hover:bg-gray-100 hover:text-gray-700"
+                                                ? "cursor-not-allowed opacity-50"
+                                                : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-l`}
                                         >
                                             <ChevronLeftIcon
@@ -300,8 +292,8 @@ export default function DetailKegiatanPage() {
                                             onClick={handleNextPage}
                                             disabled={currentPage * itemsPerPage >= filteredPesertaList.length}
                                             className={`p-1 sm:p-2 text-xs sm:text-sm text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= filteredPesertaList.length
-                                                    ? "cursor-not-allowed opacity-50"
-                                                    : "hover:bg-gray-100 hover:text-gray-700"
+                                                ? "cursor-not-allowed opacity-50"
+                                                : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-r`}
                                         >
                                             <ChevronRightIcon
