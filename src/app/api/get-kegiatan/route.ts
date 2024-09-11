@@ -37,6 +37,7 @@ export async function GET(req: Request) {
     // Build the base query to join kegiatan and kegiatan_mitra
     const query = db
       .select({
+        kegiatan_id: kegiatan.kegiatan_id,
         nama_kegiatan: kegiatan.nama_kegiatan,
         kode: kegiatan.kode,
         penanggung_jawab: users.name, // Adjust this based on your actual column name
