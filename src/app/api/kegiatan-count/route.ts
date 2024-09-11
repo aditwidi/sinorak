@@ -4,6 +4,8 @@ import { db } from '@/lib/db/db'; // Adjust the import path as needed
 import { eq, and } from 'drizzle-orm';
 import { kegiatan } from '@/lib/db/schema';
 
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
     try {
         // Get the current month and year
