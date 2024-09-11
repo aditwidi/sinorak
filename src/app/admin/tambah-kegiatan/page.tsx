@@ -124,12 +124,21 @@ function TambahKegiatanPage() {
 
     const handleVolumeChange = (index: number, volume: string) => {
         const newMitraEntries = [...mitraEntries];
+        // Allow empty input without triggering a warning
+        if (volume === "") {
+            newMitraEntries[index].target_volume_pekerjaan = volume;
+            setMitraEntries(newMitraEntries);
+            return;
+        }
+
         const numericVolume = parseInt(volume, 10);
+
+        // Validate that the input is a valid number and is not negative
         if (isNaN(numericVolume) || numericVolume <= 0) {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan",
-                text: "Target volume harus lebih dari nol.",
+                text: "Target volume tidak boleh nol dan negatif.",
             });
             return;
         }

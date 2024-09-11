@@ -1,4 +1,3 @@
-// src/app/api/update-honor-mitra-monthly/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/db";
 import { mitra_honor_monthly, kegiatan_mitra, kegiatan } from "@/lib/db/schema";
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
             const { month, year } = extractMonthAndYear(entry.tanggal_berakhir);
             const key = `${entry.sobat_id}-${month}-${year}`;
             const deduction = acc.get(key) || 0;
-            acc.set(key, deduction + entry.total_honor);
+            acc.set(key, deduction + (entry.total_honor || 0)); // Ensure total_honor is a number
             return acc;
         }, new Map<string, number>());
 
@@ -76,6 +75,11 @@ export async function POST(req: NextRequest) {
                 total_honor: deduction, // Only the amount to be deducted
             };
         }).filter((update): update is NonNullable<typeof update> => update !== null); // Properly type-guard against null
+
+        // Check if updates array is empty
+        if (updates.length === 0) {
+            return NextResponse.json({ message: "No updates required" }, { status: 200 });
+        }
 
         // Perform upsert operation: Insert new records or update existing ones
         await db

@@ -161,7 +161,8 @@ function EditKegiatanPage() {
         };
 
         fetchInitialData();
-    }, [kegiatan_id, session]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const checkHonorLimits = useCallback(() => {
         const exceedsLimit = mitraEntries.some((entry) => {
@@ -198,11 +199,11 @@ function EditKegiatanPage() {
     const handleVolumeChange = (index: number, volume: string) => {
         const numericVolume = parseInt(volume, 10);
 
-        if (isNaN(numericVolume) || numericVolume <= 0) {
+        if (isNaN(numericVolume) || numericVolume < 0) {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan",
-                text: "Target volume harus lebih dari nol.",
+                text: "Target volume tidak boleh negatif.",
             });
             return;
         }
