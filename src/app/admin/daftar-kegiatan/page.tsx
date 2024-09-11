@@ -24,7 +24,7 @@ interface KegiatanData {
     nama_kegiatan: string;
     kode: string;
     penanggung_jawab: string;
-    jenis_kegiatan: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_kegiatan: "Lapangan" | "Pengolahan"; // Updated ENUM
 }
 
 export default function DaftarKegiatanPage() {
@@ -308,8 +308,7 @@ export default function DaftarKegiatanPage() {
                         onChange={(e) => setFilterJenisKegiatan(e.target.value)}
                     >
                         <option value="">Jenis Kegiatan</option>
-                        <option value="Pendataan">Pendataan</option>
-                        <option value="Pemeriksaan">Pemeriksaan</option>
+                        <option value="Lapangan">Lapangan</option>
                         <option value="Pengolahan">Pengolahan</option>
                     </select>
                 </div>
@@ -344,12 +343,10 @@ export default function DaftarKegiatanPage() {
                                                 <td className="px-6 py-4">{kegiatan.penanggung_jawab}</td>
                                                 <td className="px-6 py-4">
                                                     <span
-                                                        className={`px-2 py-1 text-xs font-medium rounded-full ${kegiatan.jenis_kegiatan === "Pendataan"
+                                                        className={`px-2 py-1 text-xs font-medium rounded-full ${kegiatan.jenis_kegiatan === "Lapangan"
                                                             ? "text-blue-800 bg-blue-100"
-                                                            : kegiatan.jenis_kegiatan === "Pemeriksaan"
-                                                                ? "text-green-800 bg-green-100"
-                                                                : "text-yellow-800 bg-yellow-100"
-                                                            }`}
+                                                            : "text-yellow-800 bg-yellow-100"
+                                                        }`}
                                                     >
                                                         {kegiatan.jenis_kegiatan}
                                                     </span>

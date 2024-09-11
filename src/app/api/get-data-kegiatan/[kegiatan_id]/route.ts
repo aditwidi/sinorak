@@ -4,6 +4,8 @@ import { db } from '@/lib/db/db';
 import { kegiatan, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+export const revalidate = 0;
+
 export async function GET(req: NextRequest, { params }: { params: { kegiatan_id: string } }) {
     const { kegiatan_id } = params;
 

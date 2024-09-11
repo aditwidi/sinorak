@@ -22,7 +22,7 @@ export default function EditMitraPage() {
     // State for form fields
     const [sobatId, setSobatId] = useState(sobat_id || ""); // Corresponds to 'sobat_id' in schema
     const [nik, setNik] = useState(""); // Corresponds to 'nik' in schema
-    const [jenisPetugas, setJenisPetugas] = useState<"Pendataan" | "Pemeriksaan" | "Pengolahan">("Pendataan"); // Default value
+    const [jenisPetugas, setJenisPetugas] = useState<"Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan">("Pendataan"); // Default value
     const [nama, setNama] = useState(""); // Corresponds to 'nama' in schema
     const [pekerjaan, setPekerjaan] = useState(""); // Corresponds to 'pekerjaan' in schema
     const [alamat, setAlamat] = useState(""); // Corresponds to 'alamat' in schema
@@ -214,12 +214,12 @@ export default function EditMitraPage() {
                                 <select
                                     id="jenis-petugas"
                                     value={jenisPetugas}
-                                    onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan")}
+                                    onChange={(e) => setJenisPetugas(e.target.value as "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan")}
                                     className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 >
                                     <option value="Pendataan">Pendataan</option>
-                                    <option value="Pemeriksaan">Pemeriksaan</option>
                                     <option value="Pengolahan">Pengolahan</option>
+                                    <option value="Pendataan dan Pengolahan">Pendataan dan Pengolahan</option>
                                 </select>
                             )}
                         </div>

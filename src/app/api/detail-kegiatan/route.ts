@@ -9,7 +9,7 @@ interface KegiatanDetailResponse {
         kegiatan_id: number;
         nama_kegiatan: string;
         kode: string;
-        jenis_kegiatan: 'Pendataan' | 'Pemeriksaan' | 'Pengolahan';
+        jenis_kegiatan: 'Lapangan' | 'Pengolahan'; // Include 'Lapangan'
         tanggal_mulai: string;
         tanggal_berakhir: string;
         month: number;
@@ -23,6 +23,7 @@ interface KegiatanDetailResponse {
         nama: string;
         target: number;
         honor: number;
+        status_mitra: 'PPL' | 'PML' | 'Operator' | 'Supervisor'; // Include status_mitra field
     }>;
     totalHonor: number;
 }
@@ -69,13 +70,14 @@ export async function GET(request: NextRequest) {
             honor_satuan: kegiatanDetail.honor_satuan ?? 0 // Default to 0 if honor_satuan is null
         };
 
-        // Fetch the peserta list for the Kegiatan
+        // Fetch the peserta list for the Kegiatan including status_mitra
         const pesertaList = await db
             .select({
                 sobat_id: mitra.sobat_id,
                 nama: mitra.nama,
                 target: kegiatan_mitra.target_volume_pekerjaan,
                 honor: kegiatan_mitra.total_honor,
+                status_mitra: kegiatan_mitra.status_mitra // Fetch status_mitra
             })
             .from(kegiatan_mitra)
             .innerJoin(mitra, eq(kegiatan_mitra.sobat_id, mitra.sobat_id))

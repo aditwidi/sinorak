@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/db"; // Import your database instance
 import { honor_limit } from "@/lib/db/schema"; // Import your schema
 
+export const revalidate = 0;
+
 export async function GET(request: Request) {
     try {
         // Fetch all honor limits

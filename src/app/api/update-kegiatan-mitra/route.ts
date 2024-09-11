@@ -8,7 +8,8 @@ interface MitraEntry {
     sobat_id: string;
     target_volume_pekerjaan: number;
     total_honor: number;
-    jenis_petugas?: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_petugas?: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan";
+    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor"; // Add status_mitra here
 }
 
 export async function PUT(req: NextRequest) {
@@ -20,28 +21,53 @@ export async function PUT(req: NextRequest) {
         kegiatan_id = Number(kegiatan_id);
 
         // Validate input fields
-        if (isNaN(kegiatan_id) || !Array.isArray(mitra_entries) || typeof honor_satuan !== 'number') {
-            console.error('Validation Error: Missing or invalid fields', { kegiatan_id, mitra_entries, honor_satuan });
-            return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 });
+        if (
+            isNaN(kegiatan_id) ||
+            !Array.isArray(mitra_entries) ||
+            typeof honor_satuan !== 'number'
+        ) {
+            console.error('Validation Error: Missing or invalid fields', {
+                kegiatan_id,
+                mitra_entries,
+                honor_satuan,
+            });
+            return NextResponse.json(
+                { error: 'Missing or invalid fields' },
+                { status: 400 }
+            );
         }
 
         // Validate each mitra entry
-        if (!mitra_entries.every(entry => entry.sobat_id && typeof entry.target_volume_pekerjaan === 'number' && typeof entry.total_honor === 'number')) {
+        if (
+            !mitra_entries.every(
+                (entry) =>
+                    entry.sobat_id &&
+                    typeof entry.target_volume_pekerjaan === 'number' &&
+                    typeof entry.total_honor === 'number' &&
+                    (!entry.status_mitra ||
+                        ["PPL", "PML", "Operator", "Supervisor"].includes(entry.status_mitra)) // Validate status_mitra
+            )
+        ) {
             console.error('Validation Error: Invalid mitra entry data');
-            return NextResponse.json({ error: 'Invalid mitra entry data' }, { status: 400 });
+            return NextResponse.json(
+                { error: 'Invalid mitra entry data' },
+                { status: 400 }
+            );
         }
 
         // Create an array of SQL operations for batch execution
-        const batchUpdates = mitra_entries.map(entry => 
-            db.update(kegiatan_mitra)
+        const batchUpdates = mitra_entries.map((entry) =>
+            db
+                .update(kegiatan_mitra)
                 .set({
                     honor_satuan,
                     target_volume_pekerjaan: entry.target_volume_pekerjaan,
-                    total_honor: entry.total_honor
+                    total_honor: entry.total_honor,
+                    status_mitra: entry.status_mitra, // Include status_mitra in the update
                 })
                 .where(
                     and(
-                        eq(kegiatan_mitra.kegiatan_id, kegiatan_id), 
+                        eq(kegiatan_mitra.kegiatan_id, kegiatan_id),
                         eq(kegiatan_mitra.sobat_id, entry.sobat_id)
                     )
                 )
@@ -50,9 +76,15 @@ export async function PUT(req: NextRequest) {
         // Execute the batch operation using the correct method
         await db.batch(batchUpdates as [typeof batchUpdates[number]]);
 
-        return NextResponse.json({ message: 'Kegiatan mitra updated successfully' }, { status: 200 });
+        return NextResponse.json(
+            { message: 'Kegiatan mitra updated successfully' },
+            { status: 200 }
+        );
     } catch (error) {
         console.error('Error updating kegiatan mitra:', error);
-        return NextResponse.json({ error: 'An error occurred while updating kegiatan mitra' }, { status: 500 });
+        return NextResponse.json(
+            { error: 'An error occurred while updating kegiatan mitra' },
+            { status: 500 }
+        );
     }
 }

@@ -6,6 +6,7 @@ import { kegiatan_mitra } from '@/lib/db/schema';
 interface MitraEntry {
     sobat_id: string;
     target_volume_pekerjaan: number;
+    status_mitra: "PPL" | "PML" | "Operator" | "Supervisor"; // Include status_mitra in the interface
 }
 
 export async function POST(req: NextRequest) {
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
             honor_satuan: parseFloat(honor_satuan),
             target_volume_pekerjaan: entry.target_volume_pekerjaan,
             total_honor: parseFloat(honor_satuan) * entry.target_volume_pekerjaan,
+            status_mitra: entry.status_mitra, // Include status_mitra field
         }));
 
         // Insert into kegiatan_mitra table

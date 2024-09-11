@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic"; // Import dynamic from next/dynamic
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
@@ -8,8 +8,8 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { useRouter } from "next/navigation";
 import Select, { components, DropdownIndicatorProps, StylesConfig } from "react-select";
-import DatePicker from "react-datepicker"; // Import react-datepicker
-import "react-datepicker/dist/react-datepicker.css"; // Import datepicker CSS
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import { id } from "date-fns/locale/id";
 import { format } from "date-fns";
@@ -25,14 +25,15 @@ interface BreadcrumbItem {
 interface Mitra {
     sobat_id: string;
     nama: string;
-    jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_petugas: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan";
 }
 
 interface MitraEntry {
     sobat_id: string;
-    target_volume_pekerjaan: number | string; // Allow both number and string
-    total_honor?: number; // Optional field to store total honor
-    jenis_petugas?: string; // Add jenis_petugas to track the type of staff
+    target_volume_pekerjaan: number | string;
+    total_honor?: number;
+    jenis_petugas?: string;
+    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor";
 }
 
 interface HonorLimit {
@@ -47,15 +48,15 @@ function TambahKegiatanPage() {
     // State for form fields
     const [namaKegiatan, setNamaKegiatan] = useState("");
     const [kode, setKode] = useState("");
-    const [jenisKegiatan, setJenisKegiatan] = useState<"Pendataan" | "Pemeriksaan" | "Pengolahan">("Pendataan");
-    const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null); // Use Date type
-    const [tanggalBerakhir, setTanggalBerakhir] = useState<Date | null>(null); // Use Date type
+    const [jenisKegiatan, setJenisKegiatan] = useState<"Lapangan" | "Pengolahan">("Lapangan");
+    const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null);
+    const [tanggalBerakhir, setTanggalBerakhir] = useState<Date | null>(null);
     const [penanggungJawab, setPenanggungJawab] = useState<string>("");
     const [satuanHonor, setSatuanHonor] = useState<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">("Dokumen");
     const [loading, setLoading] = useState(false);
     const [mitras, setMitras] = useState<Mitra[]>([]);
-    const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([{ sobat_id: "", target_volume_pekerjaan: "" }]); // Initialized with empty string
-    const [honorSatuan, setHonorSatuan] = useState<string>(""); // Handle as a formatted string
+    const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([{ sobat_id: "", target_volume_pekerjaan: "" }]);
+    const [honorSatuan, setHonorSatuan] = useState<string>("");
     const [month, setMonth] = useState<number | null>(null);
     const [year, setYear] = useState<number | null>(null);
     const [honorLimits, setHonorLimits] = useState<HonorLimit[]>([]);
@@ -92,7 +93,7 @@ function TambahKegiatanPage() {
     useEffect(() => {
         if (tanggalBerakhir) {
             const year = tanggalBerakhir.getFullYear();
-            const month = tanggalBerakhir.getMonth() + 1; // Months are zero-based
+            const month = tanggalBerakhir.getMonth() + 1;
             setMonth(month);
             setYear(year);
         }
@@ -100,10 +101,10 @@ function TambahKegiatanPage() {
 
     const handleMitraChange = async (index: number, sobat_id: string) => {
         const newMitraEntries = [...mitraEntries];
-        const selectedMitra = mitras.find(mitra => mitra.sobat_id === sobat_id);
+        const selectedMitra = mitras.find((mitra) => mitra.sobat_id === sobat_id);
 
         newMitraEntries[index].sobat_id = sobat_id;
-        newMitraEntries[index].jenis_petugas = selectedMitra?.jenis_petugas; // Set jenis_petugas for the selected mitra
+        newMitraEntries[index].jenis_petugas = selectedMitra?.jenis_petugas;
         setMitraEntries(newMitraEntries);
 
         // Fetch current honor for the mitra based on month and year
@@ -112,11 +113,10 @@ function TambahKegiatanPage() {
             const honorData = await honorResponse.json();
 
             if (honorResponse.ok && honorData.total_honor) {
-                // Store the current honor in the mitra entry
                 newMitraEntries[index].total_honor = honorData.total_honor;
                 setMitraEntries(newMitraEntries);
             } else {
-                newMitraEntries[index].total_honor = 0; // Default to 0 if no data is found
+                newMitraEntries[index].total_honor = 0;
                 setMitraEntries(newMitraEntries);
             }
         }
@@ -137,8 +137,8 @@ function TambahKegiatanPage() {
         newMitraEntries[index].target_volume_pekerjaan = volume === "" ? "" : numericVolume;
 
         // Check honor limit
-        const jenisPetugas = newMitraEntries[index].jenis_petugas; // Use jenis_petugas from the mitra entry
-        const honorLimit = honorLimits.find(limit => limit.jenis_petugas === jenisPetugas);
+        const jenisPetugas = newMitraEntries[index].jenis_petugas;
+        const honorLimit = honorLimits.find((limit) => limit.jenis_petugas === jenisPetugas);
 
         if (honorLimit) {
             const currentHonor = newMitraEntries[index].total_honor || 0;
@@ -157,32 +157,30 @@ function TambahKegiatanPage() {
     };
 
     const handleHonorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^\d]/g, ""); // Remove all non-numeric characters
+        const value = e.target.value.replace(/[^\d]/g, "");
         const numericValue = parseFloat(value);
-    
+
         if (!value || numericValue === 0) {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan",
                 text: "Honor Satuan tidak boleh kosong atau nol.",
             });
-            setHonorSatuan(""); // Clear the value if it's invalid
+            setHonorSatuan("");
             return;
         }
-    
+
         const formattedValue = formatCurrency(value);
-        setHonorSatuan(formattedValue); // Update state with formatted value
+        setHonorSatuan(formattedValue);
     };
-    
 
     const handleDateChange = (setter: React.Dispatch<React.SetStateAction<Date | null>>) => (date: Date | null) => {
-        setter(date); // Set the date directly
+        setter(date);
     };
 
     const handleNamaKegiatanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (/^[a-zA-Z0-9./\s\-()]*$/.test(value)) {
-            // Allow letters, numbers, periods, spaces, hyphens, forward slashes, and parentheses
             setNamaKegiatan(value);
         } else {
             Swal.fire({
@@ -192,13 +190,10 @@ function TambahKegiatanPage() {
             });
         }
     };
-    
-    
 
     const handleKodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (/^[a-zA-Z0-9.]*$/.test(value) && value.length <= 30) {
-            // Only allow letters, numbers, and periods, and max 30 characters
             setKode(value);
         } else {
             Swal.fire({
@@ -209,9 +204,8 @@ function TambahKegiatanPage() {
         }
     };
 
-    // Function to format number to Indonesian Rupiah format
     const formatCurrency = (value: string) => {
-        if (!value) return "Rp "; // Handle empty input
+        if (!value) return "Rp ";
         const formattedValue = new Intl.NumberFormat("id-ID", {
             style: "currency",
             currency: "IDR",
@@ -221,7 +215,7 @@ function TambahKegiatanPage() {
     };
 
     const addMitraEntry = () => {
-        setMitraEntries([...mitraEntries, { sobat_id: "", target_volume_pekerjaan: "" }]); // Add with empty string
+        setMitraEntries([...mitraEntries, { sobat_id: "", target_volume_pekerjaan: "" }]);
     };
 
     const removeMitraEntry = (index: number) => {
@@ -230,42 +224,68 @@ function TambahKegiatanPage() {
     };
 
     const getAvailableMitras = (selectedSobatIds: string[]) => {
-        return mitras.filter(mitra => !selectedSobatIds.includes(mitra.sobat_id));
+        return mitras.filter((mitra) => !selectedSobatIds.includes(mitra.sobat_id));
     };
 
-    // Fungsi untuk memeriksa apakah ada mitra yang melebihi batas honor maksimum
+    const getStatusOptions = () => {
+        if (jenisKegiatan === "Lapangan") {
+            return ["PPL", "PML"];
+        } else if (jenisKegiatan === "Pengolahan") {
+            return ["Operator", "Supervisor"];
+        }
+        return [];
+    };
+
     const checkMitraHonorExceedsLimit = () => {
         for (const entry of mitraEntries) {
-            const honorLimit = honorLimits.find(limit => limit.jenis_petugas === entry.jenis_petugas);
+            const honorLimit = honorLimits.find((limit) => limit.jenis_petugas === entry.jenis_petugas);
             if (honorLimit) {
                 const currentHonor = entry.total_honor || 0;
                 const newHonor = currentHonor + parseFloat(honorSatuan.replace(/[^\d]/g, "")) * (parseInt(entry.target_volume_pekerjaan as string, 10) || 0);
 
                 if (newHonor > honorLimit.honor_max) {
-                    return true; // Ada mitra yang melebihi batas honor maksimum
+                    return true;
                 }
             }
         }
-        return false; // Tidak ada mitra yang melebihi batas honor maksimum
+        return false;
+    };
+
+    const validateMitraEntries = () => {
+        for (const entry of mitraEntries) {
+            if (!entry.status_mitra) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Peringatan",
+                    text: "Semua mitra harus memiliki status mitra yang valid.",
+                });
+                return false;
+            }
+        }
+        return true;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
-        // Periksa apakah ada mitra yang melebihi batas honor maksimum
+        // Validate status_mitra for all entries
+        if (!validateMitraEntries()) {
+            setLoading(false);
+            return;
+        }
+
         if (checkMitraHonorExceedsLimit()) {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan",
                 text: "Terdapat mitra yang melebihi batas honor maksimum! Periksa kembali data yang dimasukkan.",
             });
-            setLoading(false); // Stop loading
-            return; // Hentikan proses submit
+            setLoading(false);
+            return;
         }
 
         try {
-            // First API call to create kegiatan
             const kegiatanResponse = await fetch("/api/kegiatan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -293,14 +313,13 @@ function TambahKegiatanPage() {
 
             const kegiatan_id = kegiatanData.kegiatan_id;
 
-            // Second API call to add mitra entries
             const mitraResponse = await fetch("/api/kegiatan-mitra", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     kegiatan_id,
                     mitra_entries: mitraEntries,
-                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
                 }),
             });
 
@@ -315,13 +334,12 @@ function TambahKegiatanPage() {
                 return;
             }
 
-            // Third API call to update honor for mitra
             const honorResponse = await fetch("/api/mitra-honor-monthly", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     mitra_entries: mitraEntries,
-                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")), // Convert back to number
+                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
                     tanggal_berakhir: tanggalBerakhir ? tanggalBerakhir.toISOString().split("T")[0] : "",
                 }),
             });
@@ -343,7 +361,6 @@ function TambahKegiatanPage() {
                     router.push("/admin/daftar-kegiatan");
                 });
             }
-
         } catch (error) {
             console.error("Error:", error);
             Swal.fire({
@@ -356,11 +373,10 @@ function TambahKegiatanPage() {
         }
     };
 
-
     const mitraOptions: Mitra[] = mitras.map((mitra) => ({
         sobat_id: mitra.sobat_id,
         nama: mitra.nama,
-        jenis_petugas: mitra.jenis_petugas, // Add jenis_petugas to the mapped object
+        jenis_petugas: mitra.jenis_petugas,
     }));
 
     const customStyles: StylesConfig<Mitra, false> = {
@@ -458,12 +474,11 @@ function TambahKegiatanPage() {
                             <select
                                 id="jenis_kegiatan"
                                 value={jenisKegiatan}
-                                onChange={(e) => setJenisKegiatan(e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan")}
+                                onChange={(e) => setJenisKegiatan(e.target.value as "Lapangan" | "Pengolahan")}
                                 required
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                             >
-                                <option value="Pendataan">Pendataan</option>
-                                <option value="Pemeriksaan">Pemeriksaan</option>
+                                <option value="Lapangan">Lapangan</option>
                                 <option value="Pengolahan">Pengolahan</option>
                             </select>
                         </div>
@@ -477,11 +492,11 @@ function TambahKegiatanPage() {
                                 selected={tanggalMulai}
                                 onChange={handleDateChange(setTanggalMulai)}
                                 dateFormat="dd/MM/yyyy"
-                                locale="id" // Set locale to Indonesian
+                                locale="id"
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholderText="Masukkan Tanggal Mulai Kegiatan"
                                 required
-                                wrapperClassName="w-full" // Ensure the wrapper has full width
+                                wrapperClassName="w-full"
                             />
                         </div>
                         <div>
@@ -492,11 +507,11 @@ function TambahKegiatanPage() {
                                 selected={tanggalBerakhir}
                                 onChange={handleDateChange(setTanggalBerakhir)}
                                 dateFormat="dd/MM/yyyy"
-                                locale="id" // Set locale to Indonesian
+                                locale="id"
                                 className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholderText="Masukkan Tanggal Berakhir Kegiatan"
                                 required
-                                wrapperClassName="w-full" // Ensure the wrapper has full width
+                                wrapperClassName="w-full"
                             />
                         </div>
 
@@ -544,7 +559,7 @@ function TambahKegiatanPage() {
                             {mitraEntries.map((entry, index) => (
                                 <div key={index} className="flex items-center space-x-4 mb-4">
                                     <Select<Mitra>
-                                        options={getAvailableMitras(mitraEntries.map(e => e.sobat_id))}
+                                        options={getAvailableMitras(mitraEntries.map((e) => e.sobat_id))}
                                         getOptionLabel={(option) => `${option.sobat_id} - ${option.nama}`}
                                         getOptionValue={(option) => option.sobat_id}
                                         value={mitraOptions.find((option) => option.sobat_id === entry.sobat_id) || null}
@@ -562,6 +577,22 @@ function TambahKegiatanPage() {
                                         className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Target Volume"
                                     />
+                                    <select
+                                        value={entry.status_mitra || ""}
+                                        onChange={(e) => {
+                                            const newEntries = [...mitraEntries];
+                                            newEntries[index].status_mitra = e.target.value as "PPL" | "PML" | "Operator" | "Supervisor";
+                                            setMitraEntries(newEntries);
+                                        }}
+                                        className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Status Mitra</option>
+                                        {getStatusOptions().map((status) => (
+                                            <option key={status} value={status}>
+                                                {status}
+                                            </option>
+                                        ))}
+                                    </select>
                                     {mitraEntries.length > 1 && (
                                         <button
                                             type="button"

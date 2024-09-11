@@ -25,7 +25,7 @@ interface BreadcrumbItem {
 interface Mitra {
     sobat_id: string;
     nama: string;
-    jenis_petugas: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_petugas: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan";
 }
 
 interface MitraEntry {
@@ -33,6 +33,7 @@ interface MitraEntry {
     target_volume_pekerjaan: number | "";
     total_honor?: number;
     jenis_petugas?: string;
+    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor";
 }
 
 interface HonorLimit {
@@ -44,8 +45,9 @@ interface KegiatanMitraEntry {
     sobat_id: string;
     target_volume_pekerjaan: number;
     total_honor?: number;
-    jenis_petugas?: "Pendataan" | "Pemeriksaan" | "Pengolahan";
+    jenis_petugas?: "Pendataan" | "Pengolahan" | "Pendataan dan Pengolahan";
     honor_satuan: number;
+    status_mitra?: "PPL" | "PML" | "Operator" | "Supervisor";
 }
 
 function EditKegiatanPage() {
@@ -55,22 +57,36 @@ function EditKegiatanPage() {
 
     const [namaKegiatan, setNamaKegiatan] = useState("");
     const [kode, setKode] = useState("");
-    const [jenisKegiatan, setJenisKegiatan] = useState<"Pendataan" | "Pemeriksaan" | "Pengolahan">("Pendataan");
+    const [jenisKegiatan, setJenisKegiatan] = useState<"Lapangan" | "Pengolahan">(
+        "Lapangan"
+    );
     const [tanggalMulai, setTanggalMulai] = useState<Date | null>(null);
     const [tanggalBerakhir, setTanggalBerakhir] = useState<Date | null>(null);
     const [penanggungJawab, setPenanggungJawab] = useState<string>("");
-    const [satuanHonor, setSatuanHonor] = useState<"Dokumen" | "OB" | "BS" | "Rumah Tangga" | "Pasar" | "Keluarga" | "SLS" | "Desa" | "Responden">("Dokumen");
+    const [satuanHonor, setSatuanHonor] = useState<
+        | "Dokumen"
+        | "OB"
+        | "BS"
+        | "Rumah Tangga"
+        | "Pasar"
+        | "Keluarga"
+        | "SLS"
+        | "Desa"
+        | "Responden"
+    >("Dokumen");
     const [loading, setLoading] = useState(false);
     const [mitras, setMitras] = useState<Mitra[]>([]);
-    const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([{ sobat_id: "", target_volume_pekerjaan: 0 }]);
+    const [mitraEntries, setMitraEntries] = useState<MitraEntry[]>([
+        { sobat_id: "", target_volume_pekerjaan: 0 },
+    ]);
     const [honorSatuan, setHonorSatuan] = useState<string>("");
     const [month, setMonth] = useState<number | null>(null);
     const [year, setYear] = useState<number | null>(null);
     const [honorLimits, setHonorLimits] = useState<HonorLimit[]>([]);
 
     const breadcrumbItems: BreadcrumbItem[] = [
-        { label: "Kegiatan Statistik", href:"/admin/daftar-kegiatan" },
-        { label: "Edit Kegiatan Statistik" }
+        { label: "Kegiatan Statistik", href: "/admin/daftar-kegiatan" },
+        { label: "Edit Kegiatan Statistik" },
     ];
 
     useEffect(() => {
@@ -79,18 +95,18 @@ function EditKegiatanPage() {
                 console.error("No kegiatan_id found");
                 return;
             }
-    
+
             try {
                 setLoading(true);
-    
+
                 const response = await fetch(`/api/get-data-kegiatan/${kegiatan_id}`);
                 const result = await response.json();
-    
+
                 if (response.ok) {
                     const data = result.kegiatan;
                     setNamaKegiatan(data.nama_kegiatan || "");
                     setKode(data.kode || "");
-                    setJenisKegiatan(data.jenis_kegiatan || "Pendataan");
+                    setJenisKegiatan(data.jenis_kegiatan || "Lapangan");
                     setTanggalMulai(data.tanggal_mulai ? new Date(data.tanggal_mulai) : null);
                     setTanggalBerakhir(data.tanggal_berakhir ? new Date(data.tanggal_berakhir) : null);
                     setPenanggungJawab(data.penanggung_jawab || "");
@@ -100,10 +116,10 @@ function EditKegiatanPage() {
                 } else {
                     Swal.fire("Error", result.error || "Failed to fetch kegiatan data", "error");
                 }
-    
+
                 const kegiatanMitraResponse = await fetch(`/api/get-kegiatan-mitra/${kegiatan_id}`);
                 const kegiatanMitraData = await kegiatanMitraResponse.json();
-    
+
                 if (kegiatanMitraResponse.ok) {
                     const honorSatuan = kegiatanMitraData.kegiatanMitraData[0]?.honor_satuan || "";
                     const mitraEntriesData = kegiatanMitraData.kegiatanMitraData.map(
@@ -112,27 +128,28 @@ function EditKegiatanPage() {
                             target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
                             total_honor: entry.total_honor,
                             jenis_petugas: entry.jenis_petugas,
+                            status_mitra: entry.status_mitra, // Fetch status_mitra from data
                         })
                     );
-    
+
                     setHonorSatuan(formatCurrency(honorSatuan.toString()));
                     setMitraEntries(mitraEntriesData);
                 } else {
                     Swal.fire("Error", kegiatanMitraData.error || "Failed to fetch kegiatan mitra data", "error");
                 }
-    
+
                 const mitrasResponse = await fetch("/api/get-all-mitra-data");
                 const mitrasData = await mitrasResponse.json();
                 if (mitrasResponse.ok) {
                     setMitras(mitrasData.mitraData);
                 }
-    
+
                 const honorLimitResponse = await fetch("/api/honor-limits");
                 const honorLimitData = await honorLimitResponse.json();
                 if (honorLimitResponse.ok) {
                     setHonorLimits(honorLimitData.honorLimits);
                 }
-    
+
                 if (session?.user) {
                     setPenanggungJawab(session.user.name || "");
                 }
@@ -142,10 +159,9 @@ function EditKegiatanPage() {
                 setLoading(false);
             }
         };
-    
+
         fetchInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);    
+    }, [kegiatan_id, session]);
 
     const checkHonorLimits = useCallback(() => {
         const exceedsLimit = mitraEntries.some((entry) => {
@@ -255,20 +271,24 @@ function EditKegiatanPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-    
-        const exceedsLimit = mitraEntries.some(entry => {
-            const honorLimit = honorLimits.find(limit => limit.jenis_petugas === entry.jenis_petugas);
+
+        const exceedsLimit = mitraEntries.some((entry) => {
+            const honorLimit = honorLimits.find(
+                (limit) => limit.jenis_petugas === entry.jenis_petugas
+            );
             if (honorLimit) {
                 const currentHonor = entry.total_honor || 0;
-                const newHonor = parseFloat(honorSatuan.replace(/[^\d]/g, "")) * (parseInt(entry.target_volume_pekerjaan as string, 10) || 0);
-    
+                const newHonor =
+                    parseFloat(honorSatuan.replace(/[^\d]/g, "")) *
+                    (parseInt(entry.target_volume_pekerjaan as string, 10) || 0);
+
                 if (newHonor > honorLimit.honor_max) {
                     return true;
                 }
             }
             return false;
         });
-    
+
         if (exceedsLimit) {
             Swal.fire({
                 icon: "warning",
@@ -278,24 +298,24 @@ function EditKegiatanPage() {
             setLoading(false);
             return;
         }
-    
+
         try {
             const deductHonorResponse = await fetch(
                 "/api/update-honor-mitra-monthly",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ kegiatan_id })
+                    body: JSON.stringify({ kegiatan_id }),
                 }
             );
-    
+
             if (!deductHonorResponse.ok) {
                 const errorData = await deductHonorResponse.json();
                 Swal.fire("Error", errorData.error || "Failed to deduct honor", "error");
                 setLoading(false);
                 return;
             }
-    
+
             const updateKegiatanResponse = await fetch("/api/update-kegiatan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -311,10 +331,10 @@ function EditKegiatanPage() {
                         ? tanggalBerakhir.toISOString().split("T")[0]
                         : "",
                     penanggung_jawab: penanggungJawab,
-                    satuan_honor: satuanHonor
-                })
+                    satuan_honor: satuanHonor,
+                }),
             });
-    
+
             if (!updateKegiatanResponse.ok) {
                 const errorData = await updateKegiatanResponse.json();
                 Swal.fire(
@@ -325,27 +345,34 @@ function EditKegiatanPage() {
                 setLoading(false);
                 return;
             }
-    
-            const updateKegiatanMitraResponse = await fetch("/api/update-kegiatan-mitra", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    kegiatan_id,
-                    mitra_entries: mitraEntries.map((entry) => ({
-                        ...entry,
-                        target_volume_pekerjaan: Number(entry.target_volume_pekerjaan)
-                    })),
-                    honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, ""))
-                })
-            });
-    
+
+            const updateKegiatanMitraResponse = await fetch(
+                "/api/update-kegiatan-mitra",
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        kegiatan_id,
+                        mitra_entries: mitraEntries.map((entry) => ({
+                            ...entry,
+                            target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
+                        })),
+                        honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
+                    }),
+                }
+            );
+
             if (!updateKegiatanMitraResponse.ok) {
                 const errorData = await updateKegiatanMitraResponse.json();
-                Swal.fire("Error", errorData.error || "Failed to update kegiatan_mitra", "error");
+                Swal.fire(
+                    "Error",
+                    errorData.error || "Failed to update kegiatan_mitra",
+                    "error"
+                );
                 setLoading(false);
                 return;
             }
-    
+
             for (const entry of mitraEntries) {
                 const updateTotalHonorResponse = await fetch("/api/update-honor", {
                     method: "PUT",
@@ -355,40 +382,45 @@ function EditKegiatanPage() {
                         sobat_id: entry.sobat_id,
                         honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
                         target_volume_pekerjaan: entry.target_volume_pekerjaan,
-                    })
+                    }),
                 });
-    
+
                 if (!updateTotalHonorResponse.ok) {
                     const errorData = await updateTotalHonorResponse.json();
-                    Swal.fire("Error", errorData.error || "Failed to update total_honor for sobat_id " + entry.sobat_id, "error");
+                    Swal.fire(
+                        "Error",
+                        errorData.error ||
+                        "Failed to update total_honor for sobat_id " + entry.sobat_id,
+                        "error"
+                    );
                     setLoading(false);
                     return;
                 }
             }
-    
+
             const updateHonorResponse = await fetch("/api/mitra-honor-monthly", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     mitra_entries: mitraEntries.map((entry) => ({
                         ...entry,
-                        target_volume_pekerjaan: Number(entry.target_volume_pekerjaan)
+                        target_volume_pekerjaan: Number(entry.target_volume_pekerjaan),
                     })),
                     honor_satuan: parseFloat(honorSatuan.replace(/[^\d]/g, "")),
                     tanggal_berakhir: tanggalBerakhir
                         ? tanggalBerakhir.toISOString().split("T")[0]
-                        : ""
-                })
+                        : "",
+                }),
             });
-    
+
             if (!updateHonorResponse.ok) {
                 const errorData = await updateHonorResponse.json();
                 Swal.fire("Error", errorData.error || "Failed to update honor", "error");
                 setLoading(false);
                 return;
             }
-    
-            Swal.fire("Success", "Kegiatan and honor updated successfully.", "success");
+
+            Swal.fire("Sukses", "Kegiatan dan honor mitra berhasil diupdate.", "success");
             router.push("/admin/daftar-kegiatan");
         } catch (error) {
             console.error("Error:", error);
@@ -400,7 +432,7 @@ function EditKegiatanPage() {
         } finally {
             setLoading(false);
         }
-    };    
+    };
 
     const handleMitraChange = async (index: number, sobat_id: string) => {
         const newMitraEntries = [...mitraEntries];
@@ -438,6 +470,14 @@ function EditKegiatanPage() {
         checkHonorLimits();
     };
 
+    const getStatusOptions = () => {
+        if (jenisKegiatan === "Lapangan") {
+            return ["PPL", "PML"];
+        } else if (jenisKegiatan === "Pengolahan") {
+            return ["Operator", "Supervisor"];
+        }
+        return [];
+    };
 
     return (
         <div className="w-full text-black">
@@ -525,15 +565,12 @@ function EditKegiatanPage() {
                             id="jenis_kegiatan"
                             value={jenisKegiatan}
                             onChange={(e) =>
-                                setJenisKegiatan(
-                                    e.target.value as "Pendataan" | "Pemeriksaan" | "Pengolahan"
-                                )
+                                setJenisKegiatan(e.target.value as "Lapangan" | "Pengolahan")
                             }
                             required
                             className="mt-1 p-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <option value="Pendataan">Pendataan</option>
-                            <option value="Pemeriksaan">Pemeriksaan</option>
+                            <option value="Lapangan">Lapangan</option>
                             <option value="Pengolahan">Pengolahan</option>
                         </select>
                     )}
@@ -652,11 +689,7 @@ function EditKegiatanPage() {
                 <div className="md:col-span-2">
                     <h2 className="text-xl font-semibold mb-4">Mitra dan Target Volume</h2>
                     {mitraEntries.map((entry, index) => (
-                        <div
-                            key={index}
-                            className="flex items-center space-x-4 mb-4"
-                        >
-                            {/* Disable Select Mitra */}
+                        <div key={index} className="flex items-center space-x-4 mb-4">
                             <Select<Mitra>
                                 options={mitras.filter(
                                     (mitra) =>
@@ -676,11 +709,32 @@ function EditKegiatanPage() {
                             />
                             <input
                                 type="number"
-                                value={entry.target_volume_pekerjaan === "" ? "" : entry.target_volume_pekerjaan.toString()} 
+                                value={entry.target_volume_pekerjaan === "" ? "" : entry.target_volume_pekerjaan.toString()}
                                 onChange={(e) => handleVolumeChange(index, e.target.value)}
                                 className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Target Volume"
                             />
+                            {/* Added status_mitra field */}
+                            <select
+                                value={entry.status_mitra || ""}
+                                onChange={(e) => {
+                                    const newEntries = [...mitraEntries];
+                                    newEntries[index].status_mitra = e.target.value as
+                                        | "PPL"
+                                        | "PML"
+                                        | "Operator"
+                                        | "Supervisor";
+                                    setMitraEntries(newEntries);
+                                }}
+                                className="w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Status Mitra</option>
+                                {getStatusOptions().map((status) => (
+                                    <option key={status} value={status}>
+                                        {status}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     ))}
                 </div>

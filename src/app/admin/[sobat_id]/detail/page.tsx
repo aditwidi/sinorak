@@ -26,6 +26,8 @@ interface Kegiatan {
     kode: string;
     penanggung_jawab: string;
     honor: number;
+    bulan: number; // Add month field
+    tahun: number; // Add year field
 }
 
 interface HonorMonthlySuccess {
@@ -52,8 +54,11 @@ export default function MitraDetailPage() {
     const [loadingTotalHonor, setLoadingTotalHonor] = useState<boolean>(true); // Loading state for total honor
     const [loadingDates, setLoadingDates] = useState<boolean>(true); // Loading state for fetching available dates
     const [searchTerm, setSearchTerm] = useState<string>("");
-    const [filterMonth, setFilterMonth] = useState<string>(""); // Initialize as empty
-    const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString()); // Default to current year
+    
+    // Initialize filters as empty strings to represent "all months" and "all years"
+    const [filterMonth, setFilterMonth] = useState<string>(""); 
+    const [filterYear, setFilterYear] = useState<string>("");
+
     const [totalHonor, setTotalHonor] = useState<number | null>(null); // State for total honor
     const [currentPage, setCurrentPage] = useState<number>(1); // State for pagination
     const itemsPerPage = 10; // Define items per page
@@ -68,7 +73,9 @@ export default function MitraDetailPage() {
     // Export function to fetch CSV data from the API
     const handleExport = async () => {
         try {
-            const response = await fetch(`/api/export-mitra?sobat_id=${validSobatId}&month=${filterMonth}&year=${filterYear}`);
+            const response = await fetch(
+                `/api/export-mitra?sobat_id=${validSobatId}&month=${filterMonth}&year=${filterYear}`
+            );
             if (!response.ok) {
                 throw new Error("Failed to export data");
             }
@@ -98,14 +105,12 @@ export default function MitraDetailPage() {
                 setAvailableMonths(data.months);
                 setAvailableYears(data.years);
 
-                // Set default filters based on the smallest available month and year
-                if (data.months.length > 0 && !filterMonth) {
-                    const smallestMonth = Math.min(...data.months).toString();
-                    setFilterMonth(smallestMonth); // Set the smallest month available
+                // Set default filters to all months and all years
+                if (data.months.length > 0 && filterMonth === "") {
+                    setFilterMonth(""); // Represents all months
                 }
-                if (data.years.length > 0 && !filterYear) {
-                    const smallestYear = Math.min(...data.years).toString();
-                    setFilterYear(smallestYear); // Set the smallest year available
+                if (data.years.length > 0 && filterYear === "") {
+                    setFilterYear(""); // Represents all years
                 }
             } else {
                 console.error("Failed to fetch available months and years:", data.error);
@@ -170,7 +175,7 @@ export default function MitraDetailPage() {
 
     // Fetch total honor for the selected month and year
     const fetchTotalHonor = useCallback(async () => {
-        if (!validSobatId || !filterMonth || !filterYear) return;
+        if (!validSobatId) return; // Ensure valid sobat_id is provided
 
         setLoadingTotalHonor(true);
         try {
@@ -237,13 +242,27 @@ export default function MitraDetailPage() {
                         mitraDetail && (
                             <div className="p-4 border border-gray-300 rounded-md shadow-md">
                                 <h2 className="text-lg font-semibold mb-4">Informasi Mitra</h2>
-                                <p className="text-sm sm:text-base"><strong>Sobat ID:</strong> {mitraDetail.sobat_id}</p>
-                                <p className="text-sm sm:text-base"><strong>NIK:</strong> {mitraDetail.nik}</p>
-                                <p className="text-sm sm:text-base"><strong>Nama:</strong> {mitraDetail.nama}</p>
-                                <p className="text-sm sm:text-base"><strong>Jenis Kelamin:</strong> {mitraDetail.jenis_kelamin}</p>
-                                <p className="text-sm sm:text-base"><strong>Pekerjaan:</strong> {mitraDetail.pekerjaan}</p>
-                                <p className="text-sm sm:text-base"><strong>Jenis Petugas:</strong> {mitraDetail.jenis_petugas}</p>
-                                <p className="text-sm sm:text-base"><strong>Alamat:</strong> {mitraDetail.alamat}</p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Sobat ID:</strong> {mitraDetail.sobat_id}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>NIK:</strong> {mitraDetail.nik}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Nama:</strong> {mitraDetail.nama}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Jenis Kelamin:</strong> {mitraDetail.jenis_kelamin}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Pekerjaan:</strong> {mitraDetail.pekerjaan}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Jenis Petugas:</strong> {mitraDetail.jenis_petugas}
+                                </p>
+                                <p className="text-sm sm:text-base">
+                                    <strong>Alamat:</strong> {mitraDetail.alamat}
+                                </p>
                             </div>
                         )
                     )}
@@ -266,10 +285,12 @@ export default function MitraDetailPage() {
                             value={filterMonth}
                             onChange={(e) => setFilterMonth(e.target.value)}
                         >
-                            <option value="">Bulan</option>
+                            <option value="">Semua Bulan</option>
                             {availableMonths.map((month) => (
                                 <option key={month} value={month.toString()}>
-                                    {new Date(0, month - 1).toLocaleString("id-ID", { month: "long" })}
+                                    {new Date(0, month - 1).toLocaleString("id-ID", {
+                                        month: "long",
+                                    })}
                                 </option>
                             ))}
                         </select>
@@ -279,7 +300,7 @@ export default function MitraDetailPage() {
                             value={filterYear}
                             onChange={(e) => setFilterYear(e.target.value)}
                         >
-                            <option value="">Tahun</option>
+                            <option value="">Semua Tahun</option>
                             {availableYears.map((year) => (
                                 <option key={year} value={year.toString()}>
                                     {year}
@@ -296,24 +317,56 @@ export default function MitraDetailPage() {
                                 <table className="min-w-full text-sm text-left text-gray-500">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                         <tr>
-                                            <th scope="col" className="px-2 py-2">Nama Kegiatan</th>
-                                            <th scope="col" className="px-2 py-2">Kode Kegiatan</th>
-                                            <th scope="col" className="px-2 py-2">Penanggung Jawab</th>
-                                            <th scope="col" className="px-2 py-2">Honor</th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Nama Kegiatan
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Kode Kegiatan
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Penanggung Jawab
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Honor
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Bulan
+                                            </th>
+                                            <th scope="col" className="px-2 py-2">
+                                                Tahun
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {kegiatanList.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="text-center py-4">Tidak ada kegiatan yang ditemukan</td>
+                                                <td colSpan={6} className="text-center py-4">
+                                                    Tidak ada kegiatan yang ditemukan
+                                                </td>
                                             </tr>
                                         ) : (
                                             kegiatanList.map((kegiatan, index) => (
-                                                <tr key={index} className="bg-white border-b hover:bg-gray-50">
-                                                    <td className="px-2 py-4 font-medium text-gray-900">{kegiatan.nama_kegiatan}</td>
+                                                <tr
+                                                    key={index}
+                                                    className="bg-white border-b hover:bg-gray-50"
+                                                >
+                                                    <td className="px-2 py-4 font-medium text-gray-900">
+                                                        {kegiatan.nama_kegiatan}
+                                                    </td>
                                                     <td className="px-2 py-4">{kegiatan.kode}</td>
-                                                    <td className="px-2 py-4">{kegiatan.penanggung_jawab}</td>
-                                                    <td className="px-2 py-4">Rp {kegiatan.honor.toLocaleString()}</td>
+                                                    <td className="px-2 py-4">
+                                                        {kegiatan.penanggung_jawab}
+                                                    </td>
+                                                    <td className="px-2 py-4">
+                                                        Rp {kegiatan.honor.toLocaleString()}
+                                                    </td>
+                                                    <td className="px-2 py-4">
+                                                        {new Date(
+                                                            0,
+                                                            kegiatan.bulan - 1
+                                                        ).toLocaleString("id-ID", { month: "long" })}
+                                                    </td>
+                                                    <td className="px-2 py-4">{kegiatan.tahun}</td>
                                                 </tr>
                                             ))
                                         )}
@@ -323,7 +376,9 @@ export default function MitraDetailPage() {
 
                             {/* Total Honor Section After Table */}
                             <nav className="flex flex-row items-center justify-between p-4 bg-white dark:bg-gray-800">
-                                <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Total Honor:</p>
+                                <p className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                                    Total Honor:
+                                </p>
                                 <p className="text-sm font-semibold text-right text-gray-900 dark:text-white">
                                     Rp {totalHonor ? totalHonor.toLocaleString() : 0}
                                 </p>
@@ -348,8 +403,8 @@ export default function MitraDetailPage() {
                                             onClick={handlePrevPage}
                                             disabled={currentPage === 1}
                                             className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage === 1
-                                                ? "cursor-not-allowed opacity-50"
-                                                : "hover:bg-gray-100 hover:text-gray-700"
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-l-md`}
                                         >
                                             <span className="sr-only">Previous</span>
@@ -361,8 +416,8 @@ export default function MitraDetailPage() {
                                             key={currentPage}
                                             onClick={() => setCurrentPage(currentPage)}
                                             className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${currentPage
-                                                ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
-                                                : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
+                                                    ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
+                                                    : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
                                                 }`}
                                         >
                                             {currentPage}
@@ -373,8 +428,8 @@ export default function MitraDetailPage() {
                                             onClick={handleNextPage}
                                             disabled={currentPage * itemsPerPage >= kegiatanList.length}
                                             className={`flex items-center justify-center h-full py-1.5 px-3 text-gray-500 bg-white border border-gray-300 ${currentPage * itemsPerPage >= kegiatanList.length
-                                                ? "cursor-not-allowed opacity-50"
-                                                : "hover:bg-gray-100 hover:text-gray-700"
+                                                    ? "cursor-not-allowed opacity-50"
+                                                    : "hover:bg-gray-100 hover:text-gray-700"
                                                 } rounded-r-md`}
                                         >
                                             <span className="sr-only">Next</span>

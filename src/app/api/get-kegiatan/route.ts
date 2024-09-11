@@ -41,6 +41,8 @@ export async function GET(req: Request) {
         kode: kegiatan.kode,
         penanggung_jawab: users.name, // Adjust this based on your actual column name
         honor: kegiatan_mitra.total_honor, // Join to get total_honor as honor
+        bulan: kegiatan.month, // Include bulan (month) from kegiatan
+        tahun: kegiatan.year, // Include tahun (year) from kegiatan
       })
       .from(kegiatan)
       .leftJoin(kegiatan_mitra, eq(kegiatan_mitra.kegiatan_id, kegiatan.kegiatan_id))
