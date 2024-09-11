@@ -6,8 +6,6 @@ import Breadcrumb from "@/components/Breadcrumb";
 import StatCard from "@/components/StatCard";
 import Link from "next/link"; // Import the Link component from Next.js
 import {
-  ClipboardDocumentCheckIcon,
-  ClipboardDocumentListIcon,
   ClipboardDocumentIcon,
   CurrencyDollarIcon,
   EyeIcon,
@@ -88,25 +86,24 @@ export default function AdminPage() {
   }, [currentMonth, currentYear]); // Run effect when component mounts or current month/year changes
 
   // Fetch total honor on component mount
-useEffect(() => {
-  const fetchTotalHonor = async () => {
-    try {
-      const response = await fetch("/api/total-honor-count");
-      const data = await response.json();
+  useEffect(() => {
+    const fetchTotalHonor = async () => {
+      try {
+        const response = await fetch("/api/total-honor-count");
+        const data = await response.json();
 
-      if (response.ok) {
-        setTotalHonor(data.totalHonor ?? 0);
-      } else {
-        console.error("Failed to fetch total honor:", data.error);
+        if (response.ok) {
+          setTotalHonor(data.totalHonor ?? 0);
+        } else {
+          console.error("Failed to fetch total honor:", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching total honor:", error);
       }
-    } catch (error) {
-      console.error("Error fetching total honor:", error);
-    }
-  };
+    };
 
-  fetchTotalHonor();
-}, []);
-
+    fetchTotalHonor();
+  }, []);
 
   // Calculate paginated data
   const filteredData = activities.filter((activity) =>
@@ -172,40 +169,33 @@ useEffect(() => {
       </h1>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 w-full"> {/* Adjusted grid-cols-3 to make cards align properly */}
         {loadingCounts ? (
           <>
             {/* Skeleton for Stat Cards */}
             <Skeleton height={100} width="100%" />
             <Skeleton height={100} width="100%" />
             <Skeleton height={100} width="100%" />
-            <Skeleton height={100} width="100%" />
           </>
         ) : (
           <>
-            {/* Actual Stat Cards */}
+            {/* Updated Stat Cards */}
             <StatCard
-              title="Total Mitra Pendataan"
+              title="Total Kegiatan Lapangan"
               subtitle="Bulan Ini"
-              value={pendataanCount.toString()}
-              icon={<ClipboardDocumentCheckIcon className="w-6 h-6 text-blue-500" />}
+              value="0"
+              icon={<ClipboardDocumentIcon className="w-6 h-6 text-blue-500" />}
             />
             <StatCard
-              title="Total Mitra Pemeriksaan"
+              title="Total Kegiatan Pengolahan"
               subtitle="Bulan Ini"
-              value={pemeriksaanCount.toString()}
-              icon={<ClipboardDocumentListIcon className="w-6 h-6 text-green-500" />}
-            />
-            <StatCard
-              title="Total Mitra Pengolahan"
-              subtitle="Bulan Ini"
-              value={pengolahanCount.toString()}
+              value="0"
               icon={<ClipboardDocumentIcon className="w-6 h-6 text-yellow-500" />}
             />
             <StatCard
               title="Total Honor Semua Mitra"
               subtitle="Bulan Ini"
-              value={`Rp ${totalHonor.toLocaleString('id-ID')}`}
+              value={`Rp ${totalHonor.toLocaleString("id-ID")}`}
               icon={<CurrencyDollarIcon className="w-6 h-6 text-red-500" />}
             />
           </>
@@ -255,7 +245,7 @@ useEffect(() => {
                     <path
                       clipRule="evenodd"
                       fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a 1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                     />
                   </svg>
                 </button>
@@ -264,7 +254,7 @@ useEffect(() => {
                 {isFilterOpen && (
                   <div className="absolute right-0 z-10 w-48 mt-2 bg-white rounded-lg shadow-lg">
                     <ul className="py-1 text-sm text-gray-700">
-                      {["Semua", "Pendataan", "Pemeriksaan", "Pengolahan"].map((type) => (
+                      {["Semua", "Lapangan", "Pengolahan"].map((type) => (
                         <li key={type}>
                           <button
                             onClick={() => handleFilterChange(type)}
@@ -315,9 +305,11 @@ useEffect(() => {
                       <td className="px-6 py-4">{activity.kode}</td>
                       <td className="px-6 py-4">{activity.penanggung_jawab}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.jenis_kegiatan === "Pendataan" ? "text-blue-800 bg-blue-100" :
-                          activity.jenis_kegiatan === "Pemeriksaan" ? "text-green-800 bg-green-100" :
-                            "text-yellow-800 bg-yellow-100"
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${activity.jenis_kegiatan === "Pendataan"
+                            ? "text-blue-800 bg-blue-100"
+                            : activity.jenis_kegiatan === "Pemeriksaan"
+                              ? "text-green-800 bg-green-100"
+                              : "text-yellow-800 bg-yellow-100"
                           }`}>
                           {activity.jenis_kegiatan}
                         </span>
@@ -363,8 +355,8 @@ useEffect(() => {
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`flex items-center justify-center px-3 py-2 text-sm leading-tight border border-gray-300 ${currentPage === i + 1
-                      ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
-                      : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
+                        ? "z-10 text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700"
+                        : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
                       }`}
                   >
                     {i + 1}
