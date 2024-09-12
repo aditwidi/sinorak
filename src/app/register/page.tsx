@@ -3,8 +3,8 @@ import { Register } from "@/components/Register";
 
 // Set page-specific metadata
 export const metadata = {
-  title: "Daftar Akun - SINORAK",
-  description: "Daftar Akun pada SINORAK.",
+  title: "Daftar Akun - SINORA",
+  description: "Daftar Akun pada SINORA.",
 };
 
 export default function RegisterPage() {

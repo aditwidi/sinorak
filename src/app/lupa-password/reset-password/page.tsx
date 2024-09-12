@@ -4,8 +4,8 @@ import ResetPassword from "@/components/ResetPassword";
 
 // Set page-specific metadata
 export const metadata = {
-  title: "Reset Password - SINORAK",
-  description: "Reset password akun Anda di SINORAK.",
+  title: "Reset Password - SINORA",
+  description: "Reset password akun Anda di SINORA.",
 };
 
 export default function ResetPasswordPage() {

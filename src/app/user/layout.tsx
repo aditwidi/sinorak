@@ -2,8 +2,8 @@ import { ReactNode } from "react";
 import ClientLayout from "@/components/UserClientLayout"; // Use the reusable client layout component
 
 export const metadata = {
-    title: "Halaman Beranda - SINORAK",
-    description: "Halaman beranda User SINORAK",
+    title: "Halaman Beranda - SINORA",
+    description: "Halaman beranda User SINORA",
 };
 
 export default function UserLayout({ children }: { children: ReactNode }) {

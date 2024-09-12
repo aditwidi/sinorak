@@ -3,8 +3,8 @@
 import { ReactNode } from "react";
 
 export const metadata = {
-    title: "Halaman Detail Profile - SINORAK",
-    description: "Halaman untuk melihat profile Anda di SINORAK",
+    title: "Halaman Detail Profile - SINORA",
+    description: "Halaman untuk melihat profile Anda di SINORA",
 };
 
 export default function DetailProfileLayout({ children }: { children: ReactNode }) {

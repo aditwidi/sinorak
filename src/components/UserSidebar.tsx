@@ -98,7 +98,7 @@ const LightSidebar: React.FC<LayoutProps> = ({ children }) => {
                                     height={32}
                                 />
                                 <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-black">
-                                    SINORAK
+                                    SINORA
                                 </span>
                             </a>
                         </div>

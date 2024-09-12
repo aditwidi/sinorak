@@ -3,8 +3,8 @@
 import { ReactNode } from "react";
 
 export const metadata = {
-    title: "Halaman Daftar Semua Kegiatan Statistik - SINORAK",
-    description: "Halaman untuk melihat data kegiatan statistik di SINORAK",
+    title: "Halaman Daftar Semua Kegiatan Statistik - SINORA",
+    description: "Halaman untuk melihat data kegiatan statistik di SINORA",
 };
 
 export default function DaftarKegiatanLayout({ children }: { children: ReactNode }) {

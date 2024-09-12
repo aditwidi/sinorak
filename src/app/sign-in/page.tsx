@@ -3,8 +3,8 @@ import { SignIn } from "@/components/SignIn";
 
 // Set page-specific metadata
 export const metadata = {
-  title: "Sign In - SINORAK",
-  description: "Masuk untuk memulai SINORAK.",
+  title: "Sign In - SINORA",
+  description: "Masuk untuk memulai SINORA.",
 };
 
 export default function SignInPage() {

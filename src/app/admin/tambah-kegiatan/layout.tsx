@@ -3,8 +3,8 @@
 import { ReactNode } from "react";
 
 export const metadata = {
-    title: "Halaman Tambah Kegiatan Statistik - SINORAK",
-    description: "Halaman untuk menambah kegiatan statistik BPS Kota Bekasi di SINORAK",
+    title: "Halaman Tambah Kegiatan Statistik - SINORA",
+    description: "Halaman untuk menambah kegiatan statistik BPS Kota Bekasi di SINORA",
 };
 
 export default function DetailProfileLayout({ children }: { children: ReactNode }) {

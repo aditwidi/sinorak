@@ -3,8 +3,8 @@ import ForgotPassword from "@/components/LupaPassword"; // Correct the import
 
 // Set page-specific metadata
 export const metadata = {
-  title: "Lupa Password - SINORAK",
-  description: "Cari akun anda pada SINORAK.",
+  title: "Lupa Password - SINORA",
+  description: "Cari akun anda pada SINORA.",
 };
 
 export default function LupaPasswordPage() {
